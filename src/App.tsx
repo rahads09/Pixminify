@@ -40,7 +40,9 @@ import {
   getTabForPath,
   getPathForTab,
   updatePageSeo,
+  SEO_DATA,
 } from './utils/seo';
+import { trackPageView } from './utils/analytics';
 
 export default function App() {
   // Start with path or hash routing
@@ -72,9 +74,12 @@ export default function App() {
     };
   }, []);
 
-  // Update SEO and document head on every activeTab change
+  // Update SEO and document head + track pageview on every activeTab change
   useEffect(() => {
     updatePageSeo(activeTab);
+    const path = getPathForTab(activeTab);
+    const title = SEO_DATA[activeTab]?.title || document.title;
+    trackPageView(path, title);
   }, [activeTab]);
 
   const handleNavigate = (tab: ActiveTab) => {
