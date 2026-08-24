@@ -1,0 +1,399 @@
+import React, { useState, useCallback, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { Header } from './components/Header';
+import { HomePage } from './components/HomePage';
+import { DropZone } from './components/DropZone';
+import { GlobalSettingsBar } from './components/GlobalSettingsBar';
+import { ImageList } from './components/ImageList';
+import { SplitCompareModal } from './components/SplitCompareModal';
+import { CropTool } from './components/CropTool';
+import { RotateTool } from './components/RotateTool';
+import { ImageToPdfTool } from './components/ImageToPdfTool';
+import { WatermarkTool } from './components/WatermarkTool';
+import { FiltersTool } from './components/FiltersTool';
+import { SocialResizerTool } from './components/SocialResizerTool';
+import { FormatConverterTool } from './components/FormatConverterTool';
+import { FormatGuide } from './components/FormatGuide';
+import { Footer } from './components/Footer';
+import { InfoModal, ModalType } from './components/InfoModal';
+import { AdBanner } from './components/AdBanner';
+import { ComingSoonPage } from './components/pages/ComingSoonPage';
+import { AboutPage } from './components/pages/AboutPage';
+import { ContactPage } from './components/pages/ContactPage';
+import { PrivacyPage } from './components/pages/PrivacyPage';
+import { TermsPage } from './components/pages/TermsPage';
+import { CookiesPage } from './components/pages/CookiesPage';
+import { FaqPage } from './components/pages/FaqPage';
+import { PricingPage } from './components/pages/PricingPage';
+import {
+  ActiveTab,
+  CompressionSettings,
+  ProcessedImage,
+} from './types';
+import { DEFAULT_SETTINGS } from './utils/presets';
+import {
+  loadImageElement,
+  processSingleImage,
+} from './utils/imageProcessor';
+
+export default function App() {
+  // Start with 'home' or read from URL hash if available
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
+    const hash = window.location.hash.replace('#', '') as ActiveTab;
+    const validTabs: ActiveTab[] = [
+      'home', 'compress', 'crop', 'rotate', 'convert', 'resize', 'pdf',
+      'watermark', 'filter', 'guide', 'about', 'contact', 'privacy',
+      'terms', 'cookies', 'faq', 'pricing', 'coming-soon'
+    ];
+    return validTabs.includes(hash) ? hash : 'home';
+  });
+  const [settings, setSettings] = useState<CompressionSettings>(DEFAULT_SETTINGS);
+  const [items, setItems] = useState<ProcessedImage[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [compareItem, setCompareItem] = useState<ProcessedImage | null>(null);
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
+
+  // Sync state with URL hash & browser back/forward
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '') as ActiveTab;
+      const validTabs: ActiveTab[] = [
+        'home', 'compress', 'crop', 'rotate', 'convert', 'resize', 'pdf',
+        'watermark', 'filter', 'guide', 'about', 'contact', 'privacy',
+        'terms', 'cookies', 'faq', 'pricing', 'coming-soon'
+      ];
+      if (validTabs.includes(hash)) {
+        setActiveTab(hash);
+      } else if (!hash) {
+        setActiveTab('home');
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handleNavigate = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    window.location.hash = tab === 'home' ? '' : tab;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Process a list of items sequentially or concurrently
+  const runCompressionQueue = useCallback(
+    async (itemsToProcess: ProcessedImage[], customConfig?: CompressionSettings) => {
+      setIsProcessing(true);
+      const activeSettings = customConfig || settings;
+
+      for (const item of itemsToProcess) {
+        setItems((prev) =>
+          prev.map((it) => (it.id === item.id ? { ...it, status: 'processing' } : it))
+        );
+
+        const result = await processSingleImage(item, activeSettings);
+
+        setItems((prev) =>
+          prev.map((it) => (it.id === item.id ? result : it))
+        );
+      }
+
+      setIsProcessing(false);
+    },
+    [settings]
+  );
+
+  // Ingest new uploaded files
+  const handleFilesAdded = useCallback(
+    async (files: File[]) => {
+      const newItems: ProcessedImage[] = [];
+
+      for (const file of files) {
+        const id = Math.random().toString(36).substring(2, 9) + Date.now();
+        const previewUrl = URL.createObjectURL(file);
+
+        let width = 0;
+        let height = 0;
+        try {
+          const img = await loadImageElement(file);
+          width = img.naturalWidth || img.width;
+          height = img.naturalHeight || img.height;
+        } catch (e) {
+          console.warn('Could not read image dimensions:', e);
+        }
+
+        newItems.push({
+          id,
+          file,
+          name: file.name,
+          originalSize: file.size,
+          originalWidth: width,
+          originalHeight: height,
+          originalType: file.type || 'image/jpeg',
+          originalPreviewUrl: previewUrl,
+          status: 'idle',
+        });
+      }
+
+      setItems((prev) => [...prev, ...newItems]);
+      runCompressionQueue(newItems);
+    },
+    [runCompressionQueue]
+  );
+
+  // Load a remote sample image for instant testing
+  const handleLoadSample = async (url: string, name: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const file = new File([blob], name, { type: blob.type || 'image/jpeg' });
+      handleFilesAdded([file]);
+      setActiveTab('compress');
+    } catch (err) {
+      console.error('Failed to load sample image:', err);
+    }
+  };
+
+  // Re-compress all images with updated global settings
+  const handleApplyToAll = () => {
+    if (items.length === 0) return;
+    runCompressionQueue(items, settings);
+  };
+
+  // Remove single item
+  const handleRemoveItem = (id: string) => {
+    setItems((prev) => {
+      const itemToRemove = prev.find((it) => it.id === id);
+      if (itemToRemove?.originalPreviewUrl) URL.revokeObjectURL(itemToRemove.originalPreviewUrl);
+      if (itemToRemove?.compressedPreviewUrl) URL.revokeObjectURL(itemToRemove.compressedPreviewUrl);
+      return prev.filter((it) => it.id !== id);
+    });
+  };
+
+  // Clear all items
+  const handleClearAll = () => {
+    items.forEach((item) => {
+      if (item.originalPreviewUrl) URL.revokeObjectURL(item.originalPreviewUrl);
+      if (item.compressedPreviewUrl) URL.revokeObjectURL(item.compressedPreviewUrl);
+    });
+    setItems([]);
+  };
+
+  return (
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col selection:bg-blue-600 selection:text-white">
+      {/* Top Header Navigation with 9-Dot Launcher and Modal callback */}
+      <Header
+        activeTab={activeTab}
+        setActiveTab={handleNavigate}
+        onLoadSample={handleLoadSample}
+        onOpenModal={(type) => handleNavigate(type as ActiveTab)}
+      />
+
+      {/* Main Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        {/* Helper breadcrumb for tool pages */}
+        {activeTab !== 'home' &&
+          [
+            'compress',
+            'crop',
+            'rotate',
+            'pdf',
+            'watermark',
+            'filter',
+            'convert',
+            'resize',
+            'guide',
+          ].includes(activeTab) && (
+            <div className="mb-6 flex items-center justify-between">
+              <button
+                onClick={() => handleNavigate('home')}
+                className="inline-flex items-center space-x-2 text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200 px-3.5 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to All Tools</span>
+              </button>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Pixminify Studio
+              </span>
+            </div>
+          )}
+
+        {/* Home Page: Serial Tools Showcase & Quick Launch */}
+        {activeTab === 'home' && (
+          <HomePage onSelectTool={handleNavigate} />
+        )}
+
+        {/* Compress Tab (Primary Minification Studio) */}
+        {activeTab === 'compress' && (
+          <div className="space-y-8 animate-in fade-in duration-200">
+            {/* Header banner */}
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+                <span>⚡ Next-Generation In-Browser Optimization</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
+                Compress images up to{' '}
+                <span className="text-blue-600">
+                  93% smaller
+                </span>{' '}
+                without quality loss
+              </h1>
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                Ultra-fast in-browser batch compression with WebP/AVIF output, smart resizing, EXIF privacy cleaning, and real-time visual split comparison.
+              </p>
+            </div>
+
+            {/* Drop Zone */}
+            <DropZone
+              onFilesAdded={handleFilesAdded}
+              onLoadSample={handleLoadSample}
+              disabled={isProcessing}
+            />
+
+            {/* Google Ads Placement */}
+            <AdBanner format="horizontal" className="max-w-4xl mx-auto my-2" />
+
+            {/* Global Settings Bar */}
+            <GlobalSettingsBar
+              settings={settings}
+              onChangeSettings={setSettings}
+              onApplyToAll={handleApplyToAll}
+              itemCount={items.length}
+              isProcessing={isProcessing}
+            />
+
+            {/* Image Queue List & Summary */}
+            <ImageList
+              items={items}
+              onRemoveItem={handleRemoveItem}
+              onClearAll={handleClearAll}
+              onOpenCompare={(item) => setCompareItem(item)}
+              isProcessing={isProcessing}
+            />
+          </div>
+        )}
+
+        {/* Crop Tool Tab */}
+        {activeTab === 'crop' && (
+          <div className="animate-in fade-in duration-200">
+            <CropTool />
+          </div>
+        )}
+
+        {/* Rotate Tool Tab */}
+        {activeTab === 'rotate' && (
+          <div className="animate-in fade-in duration-200">
+            <RotateTool />
+          </div>
+        )}
+
+        {/* Image to PDF Tool Tab */}
+        {activeTab === 'pdf' && (
+          <div className="animate-in fade-in duration-200">
+            <ImageToPdfTool />
+          </div>
+        )}
+
+        {/* Watermark Tool Tab */}
+        {activeTab === 'watermark' && (
+          <div className="animate-in fade-in duration-200">
+            <WatermarkTool />
+          </div>
+        )}
+
+        {/* Color & Filter Tool Tab */}
+        {activeTab === 'filter' && (
+          <div className="animate-in fade-in duration-200">
+            <FiltersTool />
+          </div>
+        )}
+
+        {/* Convert Format Tab */}
+        {activeTab === 'convert' && (
+          <div className="animate-in fade-in duration-200">
+            <FormatConverterTool onLoadSample={handleLoadSample} />
+          </div>
+        )}
+
+        {/* Resize Social Tab */}
+        {activeTab === 'resize' && (
+          <div className="animate-in fade-in duration-200">
+            <SocialResizerTool />
+          </div>
+        )}
+
+        {/* Format & Speed Guide Tab */}
+        {activeTab === 'guide' && (
+          <div className="animate-in fade-in duration-200">
+            <FormatGuide />
+          </div>
+        )}
+
+        {/* More Tools Coming Soon Dedicated Page */}
+        {activeTab === 'coming-soon' && (
+          <ComingSoonPage onSelectTab={handleNavigate} />
+        )}
+
+        {/* About Dedicated Page */}
+        {activeTab === 'about' && (
+          <AboutPage onSelectTab={handleNavigate} />
+        )}
+
+        {/* Contact Dedicated Page */}
+        {activeTab === 'contact' && (
+          <ContactPage onSelectTab={handleNavigate} />
+        )}
+
+        {/* Privacy Policy Dedicated Page */}
+        {activeTab === 'privacy' && (
+          <PrivacyPage onSelectTab={handleNavigate} />
+        )}
+
+        {/* Terms & Conditions Dedicated Page */}
+        {activeTab === 'terms' && (
+          <TermsPage onSelectTab={handleNavigate} />
+        )}
+
+        {/* Cookies Dedicated Page */}
+        {activeTab === 'cookies' && (
+          <CookiesPage onSelectTab={handleNavigate} />
+        )}
+
+        {/* FAQ Dedicated Page */}
+        {activeTab === 'faq' && (
+          <FaqPage onSelectTab={handleNavigate} />
+        )}
+
+        {/* Pricing Dedicated Page */}
+        {activeTab === 'pricing' && (
+          <PricingPage onSelectTab={handleNavigate} />
+        )}
+      </main>
+
+      {/* Interactive Visual Split Comparison Modal */}
+      {compareItem && (
+        <SplitCompareModal
+          item={compareItem}
+          onClose={() => setCompareItem(null)}
+        />
+      )}
+
+      {/* Information & Legal Modal Dialog fallback if triggered directly */}
+      {activeModal && (
+        <InfoModal
+          type={activeModal}
+          onClose={() => setActiveModal(null)}
+          onSelectTool={(tab) => {
+            setActiveModal(null);
+            handleNavigate(tab);
+          }}
+        />
+      )}
+
+      {/* Footer matching requested reference design */}
+      <Footer
+        onSelectTab={handleNavigate}
+        onOpenModal={(type) => handleNavigate(type as ActiveTab)}
+      />
+    </div>
+  );
+}

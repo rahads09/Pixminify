@@ -1,0 +1,6 @@
+{
+  "name": "Pixminify - Smart Image Compressor & Optimizer",
+  "description": "Next-generation in-browser image compression, format conversion (WebP, AVIF, JPEG, PNG), smart resizing, and side-by-side quality comparison.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
