@@ -17,6 +17,7 @@ import { FormatGuide } from './components/FormatGuide';
 import { Footer } from './components/Footer';
 import { InfoModal, ModalType } from './components/InfoModal';
 import { AdBanner } from './components/AdBanner';
+import { ToolSeoSection } from './components/ToolSeoSection';
 import { ComingSoonPage } from './components/pages/ComingSoonPage';
 import { AboutPage } from './components/pages/AboutPage';
 import { ContactPage } from './components/pages/ContactPage';
@@ -35,17 +36,16 @@ import {
   loadImageElement,
   processSingleImage,
 } from './utils/imageProcessor';
+import {
+  getTabForPath,
+  getPathForTab,
+  updatePageSeo,
+} from './utils/seo';
 
 export default function App() {
-  // Start with 'home' or read from URL hash if available
+  // Start with path or hash routing
   const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
-    const hash = window.location.hash.replace('#', '') as ActiveTab;
-    const validTabs: ActiveTab[] = [
-      'home', 'compress', 'crop', 'rotate', 'convert', 'resize', 'pdf',
-      'watermark', 'filter', 'guide', 'about', 'contact', 'privacy',
-      'terms', 'cookies', 'faq', 'pricing', 'coming-soon'
-    ];
-    return validTabs.includes(hash) ? hash : 'home';
+    return getTabForPath(window.location.pathname || window.location.hash);
   });
   const [settings, setSettings] = useState<CompressionSettings>(DEFAULT_SETTINGS);
   const [items, setItems] = useState<ProcessedImage[]>([]);
@@ -53,29 +53,37 @@ export default function App() {
   const [compareItem, setCompareItem] = useState<ProcessedImage | null>(null);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
-  // Sync state with URL hash & browser back/forward
+  // Sync state with URL path/hash & browser back/forward buttons
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '') as ActiveTab;
-      const validTabs: ActiveTab[] = [
-        'home', 'compress', 'crop', 'rotate', 'convert', 'resize', 'pdf',
-        'watermark', 'filter', 'guide', 'about', 'contact', 'privacy',
-        'terms', 'cookies', 'faq', 'pricing', 'coming-soon'
-      ];
-      if (validTabs.includes(hash)) {
-        setActiveTab(hash);
-      } else if (!hash) {
-        setActiveTab('home');
-      }
+    // Initial SEO update
+    updatePageSeo(activeTab);
+
+    const handlePopState = () => {
+      const tab = getTabForPath(window.location.pathname || window.location.hash);
+      setActiveTab(tab);
+      updatePageSeo(tab);
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
   }, []);
+
+  // Update SEO and document head on every activeTab change
+  useEffect(() => {
+    updatePageSeo(activeTab);
+  }, [activeTab]);
 
   const handleNavigate = (tab: ActiveTab) => {
     setActiveTab(tab);
-    window.location.hash = tab === 'home' ? '' : tab;
+    const newPath = getPathForTab(tab);
+    if (window.location.pathname !== newPath) {
+      window.history.pushState({ tab }, '', newPath);
+    }
+    updatePageSeo(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -147,7 +155,7 @@ export default function App() {
       const blob = await response.blob();
       const file = new File([blob], name, { type: blob.type || 'image/jpeg' });
       handleFilesAdded([file]);
-      setActiveTab('compress');
+      handleNavigate('compress');
     } catch (err) {
       console.error('Failed to load sample image:', err);
     }
@@ -204,13 +212,17 @@ export default function App() {
             'guide',
           ].includes(activeTab) && (
             <div className="mb-6 flex items-center justify-between">
-              <button
-                onClick={() => handleNavigate('home')}
+              <a
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigate('home');
+                }}
                 className="inline-flex items-center space-x-2 text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200 px-3.5 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Back to All Tools</span>
-              </button>
+              </a>
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 Pixminify Studio
               </span>
@@ -231,14 +243,10 @@ export default function App() {
                 <span>⚡ Next-Generation In-Browser Optimization</span>
               </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-                Compress images up to{' '}
-                <span className="text-blue-600">
-                  93% smaller
-                </span>{' '}
-                without quality loss
+                Compress Images Online
               </h1>
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                Ultra-fast in-browser batch compression with WebP/AVIF output, smart resizing, EXIF privacy cleaning, and real-time visual split comparison.
+                Compress JPG, PNG, WebP, and AVIF images up to 93% smaller without quality loss. 100% private in-browser optimization.
               </p>
             </div>
 
@@ -269,55 +277,67 @@ export default function App() {
               onOpenCompare={(item) => setCompareItem(item)}
               isProcessing={isProcessing}
             />
+
+            {/* SEO Content Section */}
+            <div className="pt-8">
+              <ToolSeoSection tab="compress" onSelectTab={handleNavigate} />
+            </div>
           </div>
         )}
 
         {/* Crop Tool Tab */}
         {activeTab === 'crop' && (
-          <div className="animate-in fade-in duration-200">
+          <div className="space-y-12 animate-in fade-in duration-200">
             <CropTool />
+            <ToolSeoSection tab="crop" onSelectTab={handleNavigate} />
           </div>
         )}
 
         {/* Rotate Tool Tab */}
         {activeTab === 'rotate' && (
-          <div className="animate-in fade-in duration-200">
+          <div className="space-y-12 animate-in fade-in duration-200">
             <RotateTool />
+            <ToolSeoSection tab="rotate" onSelectTab={handleNavigate} />
           </div>
         )}
 
         {/* Image to PDF Tool Tab */}
         {activeTab === 'pdf' && (
-          <div className="animate-in fade-in duration-200">
+          <div className="space-y-12 animate-in fade-in duration-200">
             <ImageToPdfTool />
+            <ToolSeoSection tab="pdf" onSelectTab={handleNavigate} />
           </div>
         )}
 
         {/* Watermark Tool Tab */}
         {activeTab === 'watermark' && (
-          <div className="animate-in fade-in duration-200">
+          <div className="space-y-12 animate-in fade-in duration-200">
             <WatermarkTool />
+            <ToolSeoSection tab="watermark" onSelectTab={handleNavigate} />
           </div>
         )}
 
         {/* Color & Filter Tool Tab */}
         {activeTab === 'filter' && (
-          <div className="animate-in fade-in duration-200">
+          <div className="space-y-12 animate-in fade-in duration-200">
             <FiltersTool />
+            <ToolSeoSection tab="filter" onSelectTab={handleNavigate} />
           </div>
         )}
 
         {/* Convert Format Tab */}
         {activeTab === 'convert' && (
-          <div className="animate-in fade-in duration-200">
+          <div className="space-y-12 animate-in fade-in duration-200">
             <FormatConverterTool onLoadSample={handleLoadSample} />
+            <ToolSeoSection tab="convert" onSelectTab={handleNavigate} />
           </div>
         )}
 
         {/* Resize Social Tab */}
         {activeTab === 'resize' && (
-          <div className="animate-in fade-in duration-200">
+          <div className="space-y-12 animate-in fade-in duration-200">
             <SocialResizerTool />
+            <ToolSeoSection tab="resize" onSelectTab={handleNavigate} />
           </div>
         )}
 

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ActiveTab } from '../types';
 import { AdBanner } from './AdBanner';
+import { getPathForTab } from '../utils/seo';
 
 interface HomePageProps {
   onSelectTool: (tab: ActiveTab) => void;
@@ -166,10 +167,15 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectTool }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {tools.map((tool) => {
             const Icon = tool.icon;
+            const targetPath = getPathForTab(tool.id);
             return (
-              <div
+              <a
                 key={tool.id}
-                onClick={() => onSelectTool(tool.id)}
+                href={targetPath}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onSelectTool(tool.id);
+                }}
                 className="group relative p-6 rounded-2xl bg-white hover:bg-slate-50/90 border border-slate-300 hover:border-blue-600 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between"
               >
                 <div>
@@ -198,7 +204,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectTool }) => {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
-              </div>
+              </a>
             );
           })}
         </div>

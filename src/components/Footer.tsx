@@ -29,12 +29,14 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onOpenModal }) => {
     'বাংলা',
   ];
 
-  const handleToolClick = (tab: ActiveTab) => {
+  const handleToolClick = (e: React.MouseEvent, tab: ActiveTab) => {
+    e.preventDefault();
     if (onSelectTab) onSelectTab(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleModalClick = (type: string) => {
+  const handleModalClick = (e: React.MouseEvent, type: string) => {
+    e.preventDefault();
     if (onSelectTab) onSelectTab(type as ActiveTab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -51,45 +53,50 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onOpenModal }) => {
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-sm">
               <li>
-                <button
-                  onClick={() => handleToolClick('home')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/"
+                  onClick={(e) => handleToolClick(e, 'home')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   Home
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleToolClick('compress')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/compress/"
+                  onClick={(e) => handleToolClick(e, 'compress')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   Features
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleModalClick('pricing')}
+                <a
+                  href="/pricing/"
+                  onClick={(e) => handleModalClick(e, 'pricing')}
                   className="hover:text-white transition-colors cursor-pointer text-left flex items-center space-x-1.5"
                 >
                   <span>Pricing</span>
                   <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-800/60">Free</span>
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleToolClick('home')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/"
+                  onClick={(e) => handleToolClick(e, 'home')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   Tools
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleModalClick('faq')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/faq/"
+                  onClick={(e) => handleModalClick(e, 'faq')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   FAQ
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -101,36 +108,40 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onOpenModal }) => {
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-sm">
               <li>
-                <button
-                  onClick={() => handleToolClick('watermark')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/watermark/"
+                  onClick={(e) => handleToolClick(e, 'watermark')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   PixSign
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleModalClick('about')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/about/"
+                  onClick={(e) => handleModalClick(e, 'about')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   PixAPI
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleToolClick('pdf')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/pdf/"
+                  onClick={(e) => handleToolClick(e, 'pdf')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   PixPDF
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleToolClick('guide')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/guide/"
+                  onClick={(e) => handleToolClick(e, 'guide')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   Speed & SEO Guide
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -142,28 +153,31 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onOpenModal }) => {
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-sm">
               <li>
-                <button
-                  onClick={() => handleModalClick('privacy')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/privacy/"
+                  onClick={(e) => handleModalClick(e, 'privacy')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   Privacy policy
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleModalClick('terms')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/terms/"
+                  onClick={(e) => handleModalClick(e, 'terms')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   Terms & conditions
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleModalClick('cookies')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/cookies/"
+                  onClick={(e) => handleModalClick(e, 'cookies')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   Cookies
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -175,36 +189,40 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onOpenModal }) => {
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-sm">
               <li>
-                <button
-                  onClick={() => handleModalClick('about')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/about/"
+                  onClick={(e) => handleModalClick(e, 'about')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   About us
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleModalClick('contact')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/contact/"
+                  onClick={(e) => handleModalClick(e, 'contact')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   Contact us
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleModalClick('about')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/about/"
+                  onClick={(e) => handleModalClick(e, 'about')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   Blog
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => handleModalClick('about')}
-                  className="hover:text-white transition-colors cursor-pointer text-left"
+                <a
+                  href="/about/"
+                  onClick={(e) => handleModalClick(e, 'about')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block"
                 >
                   Press
-                </button>
+                </a>
               </li>
             </ul>
           </div>

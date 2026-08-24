@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { ActiveTab } from '../types';
 import { ModalType } from './InfoModal';
+import { getPathForTab } from '../utils/seo';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -46,13 +47,15 @@ export const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleOpenInfo = (type: ActiveTab) => {
+  const handleOpenInfo = (e: React.MouseEvent, type: ActiveTab) => {
+    e.preventDefault();
     setIsWaffleOpen(false);
     setActiveTab(type);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSelectTab = (tab: ActiveTab) => {
+  const handleSelectTab = (e: React.MouseEvent, tab: ActiveTab) => {
+    e.preventDefault();
     setIsWaffleOpen(false);
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -62,9 +65,10 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="border-b border-slate-200 bg-white sticky top-0 z-40 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-18">
-          {/* Logo & Brand - Clean without version and without subtext */}
-          <div
-            onClick={() => setActiveTab('home')}
+          {/* Logo & Brand */}
+          <a
+            href="/"
+            onClick={(e) => handleSelectTab(e, 'home')}
             className="flex items-center space-x-3 cursor-pointer group"
           >
             <div className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
@@ -77,13 +81,14 @@ export const Header: React.FC<HeaderProps> = ({
                 Pix<span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-sky-400 bg-clip-text text-transparent">minify</span>
               </span>
             </div>
-          </div>
+          </a>
 
           {/* Desktop Navigation Tabs */}
           <nav className="hidden lg:flex items-center space-x-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-            <button
+            <a
               id="nav-home-tab"
-              onClick={() => setActiveTab('home')}
+              href="/"
+              onClick={(e) => handleSelectTab(e, 'home')}
               className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'home'
                   ? 'bg-blue-600 text-white shadow-xs'
@@ -92,11 +97,12 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Home className="w-3.5 h-3.5" />
               <span>All Tools</span>
-            </button>
+            </a>
 
-            <button
+            <a
               id="nav-compress-tab"
-              onClick={() => setActiveTab('compress')}
+              href="/compress/"
+              onClick={(e) => handleSelectTab(e, 'compress')}
               className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'compress'
                   ? 'bg-blue-600 text-white shadow-xs'
@@ -105,11 +111,12 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Zap className="w-3.5 h-3.5" />
               <span>Compress</span>
-            </button>
+            </a>
 
-            <button
+            <a
               id="nav-crop-tab"
-              onClick={() => setActiveTab('crop')}
+              href="/crop/"
+              onClick={(e) => handleSelectTab(e, 'crop')}
               className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'crop'
                   ? 'bg-blue-600 text-white shadow-xs'
@@ -118,11 +125,12 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Crop className="w-3.5 h-3.5" />
               <span>Crop</span>
-            </button>
+            </a>
 
-            <button
+            <a
               id="nav-rotate-tab"
-              onClick={() => setActiveTab('rotate')}
+              href="/rotate/"
+              onClick={(e) => handleSelectTab(e, 'rotate')}
               className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'rotate'
                   ? 'bg-blue-600 text-white shadow-xs'
@@ -131,11 +139,12 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <RotateCw className="w-3.5 h-3.5" />
               <span>Rotate</span>
-            </button>
+            </a>
 
-            <button
+            <a
               id="nav-convert-tab"
-              onClick={() => setActiveTab('convert')}
+              href="/convert/"
+              onClick={(e) => handleSelectTab(e, 'convert')}
               className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'convert'
                   ? 'bg-blue-600 text-white shadow-xs'
@@ -144,11 +153,12 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Convert</span>
-            </button>
+            </a>
 
-            <button
+            <a
               id="nav-pdf-tab"
-              onClick={() => setActiveTab('pdf')}
+              href="/pdf/"
+              onClick={(e) => handleSelectTab(e, 'pdf')}
               className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'pdf'
                   ? 'bg-blue-600 text-white shadow-xs'
@@ -157,11 +167,12 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <FileText className="w-3.5 h-3.5" />
               <span>PDF</span>
-            </button>
+            </a>
 
-            <button
+            <a
               id="nav-watermark-tab"
-              onClick={() => setActiveTab('watermark')}
+              href="/watermark/"
+              onClick={(e) => handleSelectTab(e, 'watermark')}
               className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'watermark'
                   ? 'bg-blue-600 text-white shadow-xs'
@@ -170,7 +181,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Stamp className="w-3.5 h-3.5" />
               <span>Watermark</span>
-            </button>
+            </a>
           </nav>
 
           {/* Right Header Actions */}
@@ -237,10 +248,12 @@ export const Header: React.FC<HeaderProps> = ({
                         { id: 'guide', label: 'Speed Guide', icon: BookOpen, color: 'text-slate-700 bg-slate-100 border-slate-300' },
                       ].map((item) => {
                         const Icon = item.icon;
+                        const targetPath = getPathForTab(item.id as ActiveTab);
                         return (
-                          <button
+                          <a
                             key={item.id}
-                            onClick={() => handleSelectTab(item.id as ActiveTab)}
+                            href={targetPath}
+                            onClick={(e) => handleSelectTab(e, item.id as ActiveTab)}
                             className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-300 transition-all text-center group cursor-pointer"
                           >
                             <div className={`p-2 rounded-xl border ${item.color} mb-1 group-hover:scale-105 transition-transform shadow-2xs`}>
@@ -249,7 +262,7 @@ export const Header: React.FC<HeaderProps> = ({
                             <span className="text-[11px] font-semibold text-slate-800 group-hover:text-blue-600">
                               {item.label}
                             </span>
-                          </button>
+                          </a>
                         );
                       })}
                     </div>
@@ -261,66 +274,73 @@ export const Header: React.FC<HeaderProps> = ({
                       Company & Legal
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                      <button
-                        onClick={() => handleOpenInfo('about')}
+                      <a
+                        href="/about/"
+                        onClick={(e) => handleOpenInfo(e, 'about')}
                         className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-blue-600 hover:bg-blue-50/50 transition-colors text-left cursor-pointer border border-transparent hover:border-slate-200"
                       >
                         <Info className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                         <span>About Us</span>
-                      </button>
+                      </a>
 
-                      <button
-                        onClick={() => handleOpenInfo('contact')}
+                      <a
+                        href="/contact/"
+                        onClick={(e) => handleOpenInfo(e, 'contact')}
                         className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-emerald-600 hover:bg-emerald-50/50 transition-colors text-left cursor-pointer border border-transparent hover:border-slate-200"
                       >
                         <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                         <span>Contact Us</span>
-                      </button>
+                      </a>
 
-                      <button
-                        onClick={() => handleOpenInfo('privacy')}
+                      <a
+                        href="/privacy/"
+                        onClick={(e) => handleOpenInfo(e, 'privacy')}
                         className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-emerald-600 hover:bg-emerald-50/50 transition-colors text-left cursor-pointer border border-transparent hover:border-slate-200"
                       >
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                         <span>Privacy Policy</span>
-                      </button>
+                      </a>
 
-                      <button
-                        onClick={() => handleOpenInfo('terms')}
+                      <a
+                        href="/terms/"
+                        onClick={(e) => handleOpenInfo(e, 'terms')}
                         className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-indigo-600 hover:bg-indigo-50/50 transition-colors text-left cursor-pointer border border-transparent hover:border-slate-200"
                       >
                         <FileText className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                         <span>Terms</span>
-                      </button>
+                      </a>
 
-                      <button
-                        onClick={() => handleOpenInfo('cookies')}
+                      <a
+                        href="/cookies/"
+                        onClick={(e) => handleOpenInfo(e, 'cookies')}
                         className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-amber-600 hover:bg-amber-50/50 transition-colors text-left cursor-pointer border border-transparent hover:border-slate-200"
                       >
                         <Cookie className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                         <span>Cookies</span>
-                      </button>
+                      </a>
 
-                      <button
-                        onClick={() => handleOpenInfo('faq')}
+                      <a
+                        href="/faq/"
+                        onClick={(e) => handleOpenInfo(e, 'faq')}
                         className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-purple-600 hover:bg-purple-50/50 transition-colors text-left cursor-pointer border border-transparent hover:border-slate-200"
                       >
                         <HelpCircle className="w-3.5 h-3.5 text-purple-600 shrink-0" />
                         <span>FAQ & Help</span>
-                      </button>
+                      </a>
                     </div>
                   </div>
 
                   {/* Bottom Footer Note */}
                   <div className="pt-2 px-1 flex items-center justify-between text-[11px] text-slate-500">
                     <span className="font-medium">Pixminify Suite</span>
-                    <button
-                      onClick={() => handleOpenInfo('pricing')}
-                      className="text-blue-600 font-semibold hover:underline flex items-center space-x-1"
+                    <a
+                      href="/pricing/"
+                      onClick={(e) => handleOpenInfo(e, 'pricing')}
+                      className="text-blue-600 font-semibold hover:underline flex items-center space-x-1 cursor-pointer"
                     >
                       <Sparkles className="w-3 h-3 text-amber-500" />
                       <span>Free Forever</span>
-                    </button>
+                    </a>
                   </div>
                 </div>
               )}
@@ -343,10 +363,12 @@ export const Header: React.FC<HeaderProps> = ({
             { id: 'guide', label: 'Speed Guide', icon: BookOpen },
           ].map((tab) => {
             const Icon = tab.icon;
+            const targetPath = getPathForTab(tab.id as ActiveTab);
             return (
-              <button
+              <a
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as ActiveTab)}
+                href={targetPath}
+                onClick={(e) => handleSelectTab(e, tab.id as ActiveTab)}
                 className={`flex items-center space-x-1 px-3 py-1 text-xs font-medium rounded-lg whitespace-nowrap cursor-pointer ${
                   activeTab === tab.id
                     ? 'bg-blue-600 text-white font-semibold shadow-xs'
@@ -355,7 +377,7 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <Icon className="w-3.5 h-3.5" />
                 <span>{tab.label}</span>
-              </button>
+              </a>
             );
           })}
         </div>
