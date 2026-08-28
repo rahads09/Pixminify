@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BookOpen, Gauge } from 'lucide-react';
+import { AdBanner } from './AdBanner';
 
 export const FormatGuide: React.FC = () => {
   const [monthlyViews, setMonthlyViews] = useState(50000);
@@ -143,6 +144,9 @@ export const FormatGuide: React.FC = () => {
         </div>
       </div>
 
+      {/* Mid-Guide Ad Placement */}
+      <AdBanner format="horizontal" className="max-w-4xl mx-auto my-4" />
+
       {/* Format Comparison Table */}
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-slate-900">
@@ -189,6 +193,9 @@ export const FormatGuide: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Bottom Guide Ad Placement */}
+      <AdBanner format="horizontal" className="max-w-4xl mx-auto my-6" />
     </div>
   );
 };

@@ -182,6 +182,20 @@ export const Header: React.FC<HeaderProps> = ({
               <Stamp className="w-3.5 h-3.5" />
               <span>Watermark</span>
             </a>
+
+            <a
+              id="nav-blog-tab"
+              href="/blog/"
+              onClick={(e) => handleSelectTab(e, 'blog')}
+              className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'blog'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-700 hover:text-slate-900 hover:bg-white'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Blog</span>
+            </a>
           </nav>
 
           {/* Right Header Actions */}
@@ -245,6 +259,7 @@ export const Header: React.FC<HeaderProps> = ({
                         { id: 'pdf', label: 'To PDF', icon: FileText, color: 'text-rose-600 bg-rose-50 border-rose-200' },
                         { id: 'watermark', label: 'Watermark', icon: Stamp, color: 'text-amber-600 bg-amber-50 border-amber-200' },
                         { id: 'filter', label: 'Filters', icon: SlidersHorizontal, color: 'text-teal-600 bg-teal-50 border-teal-200' },
+                        { id: 'blog', label: 'Blog', icon: BookOpen, color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
                         { id: 'guide', label: 'Speed Guide', icon: BookOpen, color: 'text-slate-700 bg-slate-100 border-slate-300' },
                       ].map((item) => {
                         const Icon = item.icon;
@@ -360,6 +375,7 @@ export const Header: React.FC<HeaderProps> = ({
             { id: 'pdf', label: 'PDF', icon: FileText },
             { id: 'watermark', label: 'Watermark', icon: Stamp },
             { id: 'filter', label: 'Filter', icon: SlidersHorizontal },
+            { id: 'blog', label: 'Blog', icon: BookOpen },
             { id: 'guide', label: 'Speed Guide', icon: BookOpen },
           ].map((tab) => {
             const Icon = tab.icon;

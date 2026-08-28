@@ -16,8 +16,9 @@ import {
   RefreshCw,
   BookOpen,
 } from 'lucide-react';
-import { ActiveTab } from '../types';
+import { ActiveTab, BlogArticle } from '../types';
 import { getPathForTab } from '../utils/seo';
+import { getArticleBySlug } from '../data/blogArticles';
 
 interface ToolSeoData {
   toolName: string;
@@ -28,6 +29,7 @@ interface ToolSeoData {
   supportedFormats: { name: string; desc: string }[];
   useCases: { title: string; desc: string }[];
   faqs: { q: string; a: string }[];
+  guideSlugs: string[];
   relatedTools: { tab: ActiveTab; label: string; desc: string; icon: React.ComponentType<{ className?: string }> }[];
 }
 
@@ -97,6 +99,11 @@ const TOOL_SEO_CONTENT: Partial<Record<ActiveTab, ToolSeoData>> = {
         a: 'A quality setting of 75% to 80% with WebP or JPEG output typically achieves 70-85% file size reduction with zero noticeable visual degradation.',
       },
     ],
+    guideSlugs: [
+      'how-to-compress-images-without-losing-quality',
+      'lossy-vs-lossless-image-compression',
+      'how-to-reduce-image-file-size-for-websites',
+    ],
     relatedTools: [
       { tab: 'resize', label: 'Image Resizer', desc: 'Scale image pixel dimensions for social media or web banners', icon: Maximize2 },
       { tab: 'convert', label: 'Image Converter', desc: 'Convert between WebP, JPG, PNG, and AVIF formats', icon: RefreshCw },
@@ -158,6 +165,11 @@ const TOOL_SEO_CONTENT: Partial<Record<ActiveTab, ToolSeoData>> = {
         q: 'Does cropping reduce the photo resolution?',
         a: 'Cropping extracts the selected pixel region at full native sensor clarity without unnecessary downscaling.',
       },
+    ],
+    guideSlugs: [
+      'how-to-crop-images-online',
+      'how-to-resize-images-without-losing-quality',
+      'how-to-rotate-and-flip-images',
     ],
     relatedTools: [
       { tab: 'resize', label: 'Image Resizer', desc: 'Adjust exact width and height pixel dimensions', icon: Maximize2 },
@@ -221,6 +233,11 @@ const TOOL_SEO_CONTENT: Partial<Record<ActiveTab, ToolSeoData>> = {
         a: 'Yes, our smooth bicubic interpolation allows scaling up, though the source resolution determines the maximum clarity.',
       },
     ],
+    guideSlugs: [
+      'how-to-resize-images-without-losing-quality',
+      'what-image-size-should-you-use-for-a-website',
+      'how-to-optimize-images-for-faster-website-loading',
+    ],
     relatedTools: [
       { tab: 'compress', label: 'Image Compressor', desc: 'Optimize byte size after resizing', icon: Minimize2 },
       { tab: 'crop', label: 'Image Cropper', desc: 'Cut away excess background framing', icon: CropIcon },
@@ -282,6 +299,11 @@ const TOOL_SEO_CONTENT: Partial<Record<ActiveTab, ToolSeoData>> = {
         q: 'Does rotating reduce image quality?',
         a: 'No, standard 90° and 180° rotations re-map pixel coordinates directly without degradation.',
       },
+    ],
+    guideSlugs: [
+      'how-to-rotate-and-flip-images',
+      'how-to-crop-images-online',
+      'how-to-use-image-filters',
     ],
     relatedTools: [
       { tab: 'crop', label: 'Image Cropper', desc: 'Crop out unnecessary borders after rotating', icon: CropIcon },
@@ -346,6 +368,11 @@ const TOOL_SEO_CONTENT: Partial<Record<ActiveTab, ToolSeoData>> = {
         a: 'Yes, batch conversion is fully supported in your browser.',
       },
     ],
+    guideSlugs: [
+      'jpg-vs-png-vs-webp',
+      'how-to-choose-the-right-image-format',
+      'jpg-png-or-webp-for-websites',
+    ],
     relatedTools: [
       { tab: 'compress', label: 'Image Compressor', desc: 'Fine-tune compression levels for any format', icon: Minimize2 },
       { tab: 'pdf', label: 'Image to PDF', desc: 'Bundle multiple converted photos into a single PDF document', icon: FileText },
@@ -407,6 +434,11 @@ const TOOL_SEO_CONTENT: Partial<Record<ActiveTab, ToolSeoData>> = {
         q: 'Are my sensitive documents safe from data leaks?',
         a: 'Yes, 100%. Processing takes place strictly in your local device RAM and never touches any server.',
       },
+    ],
+    guideSlugs: [
+      'how-to-convert-images-to-pdf',
+      'how-to-add-watermark-to-images',
+      'how-to-choose-the-right-image-format',
     ],
     relatedTools: [
       { tab: 'compress', label: 'Image Compressor', desc: 'Shrink photo sizes before generating PDFs', icon: Minimize2 },
@@ -470,6 +502,11 @@ const TOOL_SEO_CONTENT: Partial<Record<ActiveTab, ToolSeoData>> = {
         a: 'No, the watermark is rendered directly on top of your full-resolution source canvas.',
       },
     ],
+    guideSlugs: [
+      'how-to-add-watermark-to-images',
+      'how-to-use-image-filters',
+      'how-to-compress-images-without-losing-quality',
+    ],
     relatedTools: [
       { tab: 'compress', label: 'Image Compressor', desc: 'Compress watermarked images for fast online loading', icon: Minimize2 },
       { tab: 'crop', label: 'Image Cropper', desc: 'Frame photos before applying your logo', icon: CropIcon },
@@ -532,6 +569,11 @@ const TOOL_SEO_CONTENT: Partial<Record<ActiveTab, ToolSeoData>> = {
         a: 'All filters render instantaneously using GPU-accelerated HTML5 Canvas operations.',
       },
     ],
+    guideSlugs: [
+      'how-to-use-image-filters',
+      'how-to-rotate-and-flip-images',
+      'how-to-crop-images-online',
+    ],
     relatedTools: [
       { tab: 'crop', label: 'Image Cropper', desc: 'Crop your filtered photo to perfect dimensions', icon: CropIcon },
       { tab: 'rotate', label: 'Rotate & Flip', desc: 'Straighten perspective before applying filters', icon: RotateCw },
@@ -543,7 +585,7 @@ const TOOL_SEO_CONTENT: Partial<Record<ActiveTab, ToolSeoData>> = {
 
 interface ToolSeoSectionProps {
   tab: ActiveTab;
-  onSelectTab: (tab: ActiveTab) => void;
+  onSelectTab: (tab: ActiveTab, slug?: string | null) => void;
 }
 
 export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tab, onSelectTab }) => {
@@ -556,6 +598,15 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tab, onSelectTab
     e.preventDefault();
     onSelectTab(targetTab);
   };
+
+  const handleGuideClick = (e: React.MouseEvent<HTMLAnchorElement>, slug: string) => {
+    e.preventDefault();
+    onSelectTab('blog', slug);
+  };
+
+  const relatedArticles = data.guideSlugs
+    .map((slug) => getArticleBySlug(slug))
+    .filter((a): a is BlogArticle => Boolean(a));
 
   return (
     <div className="mt-16 pt-12 border-t border-slate-200 text-slate-800 space-y-12 max-w-5xl mx-auto">
@@ -677,6 +728,59 @@ export const ToolSeoSection: React.FC<ToolSeoSectionProps> = ({ tab, onSelectTab
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Helpful Guides & Tutorials Section (PART 8 Internal Linking) */}
+      {relatedArticles.length > 0 && (
+        <div className="space-y-4 pt-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <BookOpen className="w-5 h-5 text-blue-600" />
+              <h3 className="text-xl font-bold text-slate-900">Helpful Guides & Tutorials</h3>
+            </div>
+            <a
+              href="/blog/"
+              onClick={(e) => {
+                e.preventDefault();
+                onSelectTab('blog');
+              }}
+              className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center space-x-1"
+            >
+              <span>View All Guides</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {relatedArticles.map((article) => (
+              <a
+                key={article.slug}
+                href={`/blog/${article.slug}/`}
+                onClick={(e) => handleGuideClick(e, article.slug)}
+                className="group bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-500 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between space-y-3 cursor-pointer"
+              >
+                <div className="space-y-2">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
+                    {article.category}
+                  </span>
+                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
+                    {article.title}
+                  </h4>
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                    {article.excerpt}
+                  </p>
+                </div>
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                  <span>{article.readingTime}</span>
+                  <span className="font-bold text-blue-600 group-hover:translate-x-0.5 transition-transform flex items-center space-x-1">
+                    <span>Read</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </span>
+                </div>
+              </a>
+            ))}
           </div>
         </div>
       )}

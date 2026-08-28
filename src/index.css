@@ -63,3 +63,27 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.8);
 }
+
+/* ==========================================================================
+   Google AdSense Responsive Container & Zero-Layout-Shift Collapsing Rules
+   ========================================================================== */
+.adsense-slot-container {
+  display: block;
+  width: 100%;
+  position: relative;
+  transition: min-height 0.2s ease, opacity 0.2s ease;
+}
+
+/* Unfilled AdSense ads: completely collapse container to avoid empty space */
+ins.adsbygoogle[data-ad-status="unfilled"] {
+  display: none !important;
+}
+
+.adsense-slot-container:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  height: 0 !important;
+}
+

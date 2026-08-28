@@ -213,6 +213,81 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectTool }) => {
       {/* Mid-Page Google Ads Banner Slot */}
       <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
 
+      {/* Educational Guides & Blog Section */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Featured Guides & Tutorials</h2>
+            <p className="text-xs text-slate-600 mt-0.5">Learn best practices for image optimization, formats, and editing</p>
+          </div>
+          <a
+            href="/blog/"
+            onClick={(e) => {
+              e.preventDefault();
+              onSelectTool('blog');
+            }}
+            className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center space-x-1"
+          >
+            <span>View All Guides</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              slug: 'how-to-compress-images-without-losing-quality',
+              title: 'How to Compress Images Without Losing Quality',
+              category: 'Image Compression',
+              time: '7 min read',
+            },
+            {
+              slug: 'jpg-vs-png-vs-webp',
+              title: 'JPG vs PNG vs WebP: Which Format Should You Use?',
+              category: 'Image Formats',
+              time: '8 min read',
+            },
+            {
+              slug: 'how-to-crop-images-online',
+              title: 'How to Crop Images Online: Composition & Aspect Ratios',
+              category: 'Image Editing',
+              time: '6 min read',
+            },
+            {
+              slug: 'how-to-convert-images-to-pdf',
+              title: 'How to Convert Images to PDF Online',
+              category: 'PDF Tools',
+              time: '6 min read',
+            },
+          ].map((guide) => (
+            <a
+              key={guide.slug}
+              href={`/blog/${guide.slug}/`}
+              onClick={(e) => {
+                e.preventDefault();
+                onSelectTool('blog');
+                window.history.pushState({}, '', `/blog/${guide.slug}/`);
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }}
+              className="p-4 rounded-2xl bg-white border border-slate-200 hover:border-blue-500 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between group space-y-3"
+            >
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600">
+                  {guide.category}
+                </span>
+                <h3 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
+                  {guide.title}
+                </h3>
+              </div>
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                <span>{guide.time}</span>
+                <span className="font-bold text-blue-600 group-hover:translate-x-0.5 transition-transform">Read →</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+
       {/* Feature Guarantee Badges */}
       <section className="p-8 rounded-2xl bg-white border border-slate-300 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-6 text-center sm:text-left">
         <div className="flex items-start space-x-3.5">
@@ -251,6 +326,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectTool }) => {
           </div>
         </div>
       </section>
+
+      {/* Pre-Footer Banner Ad Slot */}
+      <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
     </div>
   );
 };

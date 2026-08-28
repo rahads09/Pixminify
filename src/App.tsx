@@ -18,6 +18,8 @@ import { Footer } from './components/Footer';
 import { InfoModal, ModalType } from './components/InfoModal';
 import { AdBanner } from './components/AdBanner';
 import { ToolSeoSection } from './components/ToolSeoSection';
+import { BlogHomePage } from './components/blog/BlogHomePage';
+import { BlogArticlePage } from './components/blog/BlogArticlePage';
 import { ComingSoonPage } from './components/pages/ComingSoonPage';
 import { AboutPage } from './components/pages/AboutPage';
 import { ContactPage } from './components/pages/ContactPage';
@@ -26,6 +28,7 @@ import { TermsPage } from './components/pages/TermsPage';
 import { CookiesPage } from './components/pages/CookiesPage';
 import { FaqPage } from './components/pages/FaqPage';
 import { PricingPage } from './components/pages/PricingPage';
+import { NotFoundPage } from './components/pages/NotFoundPage';
 import {
   ActiveTab,
   CompressionSettings,
@@ -39,15 +42,20 @@ import {
 import {
   getTabForPath,
   getPathForTab,
+  getBlogSlugFromPath,
   updatePageSeo,
   SEO_DATA,
 } from './utils/seo';
+import { getArticleBySlug } from './data/blogArticles';
 import { trackPageView } from './utils/analytics';
 
 export default function App() {
   // Start with path or hash routing
   const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
     return getTabForPath(window.location.pathname || window.location.hash);
+  });
+  const [activeBlogSlug, setActiveBlogSlug] = useState<string | null>(() => {
+    return getBlogSlugFromPath(window.location.pathname || window.location.hash);
   });
   const [settings, setSettings] = useState<CompressionSettings>(DEFAULT_SETTINGS);
   const [items, setItems] = useState<ProcessedImage[]>([]);
@@ -57,13 +65,19 @@ export default function App() {
 
   // Sync state with URL path/hash & browser back/forward buttons
   useEffect(() => {
-    // Initial SEO update
-    updatePageSeo(activeTab);
+    const raw = window.location.pathname || window.location.hash;
+    const initialSlug = getBlogSlugFromPath(raw);
+    const initialArticle = initialSlug ? getArticleBySlug(initialSlug) : null;
+    updatePageSeo(activeTab, initialArticle);
 
     const handlePopState = () => {
-      const tab = getTabForPath(window.location.pathname || window.location.hash);
+      const currentRaw = window.location.pathname || window.location.hash;
+      const tab = getTabForPath(currentRaw);
+      const slug = getBlogSlugFromPath(currentRaw);
       setActiveTab(tab);
-      updatePageSeo(tab);
+      setActiveBlogSlug(slug);
+      const currentArticle = slug ? getArticleBySlug(slug) : null;
+      updatePageSeo(tab, currentArticle);
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -74,22 +88,29 @@ export default function App() {
     };
   }, []);
 
-  // Update SEO and document head + track pageview on every activeTab change
+  // Update SEO and document head + track pageview on every activeTab or activeBlogSlug change
   useEffect(() => {
-    updatePageSeo(activeTab);
-    const path = getPathForTab(activeTab);
-    const title = SEO_DATA[activeTab]?.title || document.title;
+    const article = activeBlogSlug ? getArticleBySlug(activeBlogSlug) : null;
+    updatePageSeo(activeTab, article);
+    const path = getPathForTab(activeTab, activeBlogSlug);
+    const title = article ? article.seoTitle : (SEO_DATA[activeTab]?.title || document.title);
     trackPageView(path, title);
-  }, [activeTab]);
+  }, [activeTab, activeBlogSlug]);
 
-  const handleNavigate = (tab: ActiveTab) => {
+  const handleNavigate = (tab: ActiveTab, slug: string | null = null) => {
     setActiveTab(tab);
-    const newPath = getPathForTab(tab);
+    setActiveBlogSlug(slug);
+    const newPath = getPathForTab(tab, slug);
     if (window.location.pathname !== newPath) {
-      window.history.pushState({ tab }, '', newPath);
+      window.history.pushState({ tab, slug }, '', newPath);
     }
-    updatePageSeo(tab);
+    const article = slug ? getArticleBySlug(slug) : null;
+    updatePageSeo(tab, article);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNavigateArticle = (slug: string) => {
+    handleNavigate('blog', slug);
   };
 
   // Process a list of items sequentially or concurrently
@@ -294,6 +315,7 @@ export default function App() {
         {activeTab === 'crop' && (
           <div className="space-y-12 animate-in fade-in duration-200">
             <CropTool />
+            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
             <ToolSeoSection tab="crop" onSelectTab={handleNavigate} />
           </div>
         )}
@@ -302,6 +324,7 @@ export default function App() {
         {activeTab === 'rotate' && (
           <div className="space-y-12 animate-in fade-in duration-200">
             <RotateTool />
+            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
             <ToolSeoSection tab="rotate" onSelectTab={handleNavigate} />
           </div>
         )}
@@ -310,6 +333,7 @@ export default function App() {
         {activeTab === 'pdf' && (
           <div className="space-y-12 animate-in fade-in duration-200">
             <ImageToPdfTool />
+            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
             <ToolSeoSection tab="pdf" onSelectTab={handleNavigate} />
           </div>
         )}
@@ -318,6 +342,7 @@ export default function App() {
         {activeTab === 'watermark' && (
           <div className="space-y-12 animate-in fade-in duration-200">
             <WatermarkTool />
+            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
             <ToolSeoSection tab="watermark" onSelectTab={handleNavigate} />
           </div>
         )}
@@ -326,6 +351,7 @@ export default function App() {
         {activeTab === 'filter' && (
           <div className="space-y-12 animate-in fade-in duration-200">
             <FiltersTool />
+            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
             <ToolSeoSection tab="filter" onSelectTab={handleNavigate} />
           </div>
         )}
@@ -334,6 +360,7 @@ export default function App() {
         {activeTab === 'convert' && (
           <div className="space-y-12 animate-in fade-in duration-200">
             <FormatConverterTool onLoadSample={handleLoadSample} />
+            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
             <ToolSeoSection tab="convert" onSelectTab={handleNavigate} />
           </div>
         )}
@@ -342,6 +369,7 @@ export default function App() {
         {activeTab === 'resize' && (
           <div className="space-y-12 animate-in fade-in duration-200">
             <SocialResizerTool />
+            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
             <ToolSeoSection tab="resize" onSelectTab={handleNavigate} />
           </div>
         )}
@@ -350,6 +378,24 @@ export default function App() {
         {activeTab === 'guide' && (
           <div className="animate-in fade-in duration-200">
             <FormatGuide />
+          </div>
+        )}
+
+        {/* Blog / Guides Section */}
+        {activeTab === 'blog' && (
+          <div className="animate-in fade-in duration-200">
+            {activeBlogSlug && getArticleBySlug(activeBlogSlug) ? (
+              <BlogArticlePage
+                article={getArticleBySlug(activeBlogSlug)!}
+                onSelectArticle={handleNavigateArticle}
+                onSelectTab={handleNavigate}
+              />
+            ) : (
+              <BlogHomePage
+                onSelectArticle={handleNavigateArticle}
+                onSelectTab={handleNavigate}
+              />
+            )}
           </div>
         )}
 
@@ -391,6 +437,11 @@ export default function App() {
         {/* Pricing Dedicated Page */}
         {activeTab === 'pricing' && (
           <PricingPage onSelectTab={handleNavigate} />
+        )}
+
+        {/* 404 Dedicated Not Found Page */}
+        {activeTab === 'not-found' && (
+          <NotFoundPage onSelectTab={handleNavigate} />
         )}
       </main>
 

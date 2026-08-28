@@ -62,6 +62,7 @@ export type ActiveTab =
   | 'watermark'
   | 'filter'
   | 'guide'
+  | 'blog'
   | 'about'
   | 'contact'
   | 'privacy'
@@ -69,7 +70,79 @@ export type ActiveTab =
   | 'cookies'
   | 'faq'
   | 'pricing'
-  | 'coming-soon';
+  | 'coming-soon'
+  | 'not-found';
+
+export type BlogCategory =
+  | 'Image Compression'
+  | 'Image Editing'
+  | 'Image Resizing'
+  | 'Image Formats'
+  | 'Image Conversion'
+  | 'PDF Tools'
+  | 'Watermarking'
+  | 'Image Filters'
+  | 'Image Optimization'
+  | 'Image Basics'
+  | 'Tutorials & Guides';
+
+export interface BlogFaqItem {
+  question: string;
+  answer: string;
+}
+
+export interface BlogTocItem {
+  id: string;
+  title: string;
+}
+
+export interface BlogArticle {
+  slug: string;
+  title: string;
+  seoTitle: string;
+  metaDescription: string;
+  category: BlogCategory;
+  publishDate: string;
+  updateDate: string;
+  readingTime: string;
+  excerpt: string;
+  author: {
+    name: string;
+    role: string;
+    avatarUrl?: string;
+  };
+  coverGradient: string;
+  relatedToolTab: ActiveTab;
+  relatedToolName: string;
+  ctaHeadline: string;
+  ctaDescription: string;
+  ctaButtonText: string;
+  toc: BlogTocItem[];
+  keyTakeaways: string[];
+  faqs: BlogFaqItem[];
+  relatedArticleSlugs: string[];
+  content: {
+    intro: string;
+    sections: {
+      id: string;
+      title: string;
+      subtitle?: string;
+      body: string[]; // rich paragraphs
+      bulletPoints?: string[];
+      proTip?: string;
+      warning?: string;
+      table?: {
+        headers: string[];
+        rows: string[][];
+      };
+      stepList?: {
+        stepNumber: number;
+        title: string;
+        description: string;
+      }[];
+    }[];
+  };
+}
 
 export type Language = 'en';
 

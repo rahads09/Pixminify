@@ -1,4 +1,5 @@
-import { ActiveTab } from '../types';
+import { ActiveTab, BlogArticle } from '../types';
+import { getArticleBySlug } from '../data/blogArticles';
 
 export interface SeoMetadata {
   path: string;
@@ -114,6 +115,17 @@ export const SEO_DATA: Record<ActiveTab, SeoMetadata> = {
     ogUrl: `${CANONICAL_DOMAIN}/filter/`,
     keywords: ['photo filters online', 'apply filters to images', 'free photo effects', 'vintage filter', 'grayscale picture', 'color tone'],
   },
+  blog: {
+    path: '/blog/',
+    title: 'Pixminify Blog - Guides, Tutorials & Image Optimization Tips',
+    description: 'Explore practical guides, tutorials, and deep-dive technical articles on image compression, resizing, formats (WebP vs JPG vs PNG), cropping, and optimization.',
+    h1: 'Pixminify Blog',
+    canonical: `${CANONICAL_DOMAIN}/blog/`,
+    ogTitle: 'Pixminify Blog - Guides, Tutorials & Image Optimization Tips',
+    ogDescription: 'Explore practical guides, tutorials, and deep-dive technical articles on image compression, resizing, formats (WebP vs JPG vs PNG), cropping, and optimization.',
+    ogUrl: `${CANONICAL_DOMAIN}/blog/`,
+    keywords: ['image optimization blog', 'image compression tutorials', 'how to crop images', 'jpg vs png vs webp', 'photo editing guides'],
+  },
   faq: {
     path: '/faq/',
     title: 'Frequently Asked Questions & Help Guide | Pixminify',
@@ -205,14 +217,41 @@ export const SEO_DATA: Record<ActiveTab, SeoMetadata> = {
     ogDescription: 'Preview upcoming tools in active development: AI Background Remover, SVG Vectorizer, EXIF Stripper, OCR Text Extractor, and more.',
     ogUrl: `${CANONICAL_DOMAIN}/coming-soon/`,
   },
+  'not-found': {
+    path: '/404/',
+    title: 'Page Not Found (404) | Pixminify',
+    description: 'The requested page could not be found. Explore our free in-browser image optimization tools and blog guides.',
+    h1: '404 - Page Not Found',
+    canonical: `${CANONICAL_DOMAIN}/404/`,
+    ogTitle: 'Page Not Found (404) | Pixminify',
+    ogDescription: 'The requested page could not be found. Explore our free in-browser image optimization tools and blog guides.',
+    ogUrl: `${CANONICAL_DOMAIN}/404/`,
+  },
 };
 
 /**
  * Normalizes tab string to standard canonical path URL
  */
-export const getPathForTab = (tab: ActiveTab): string => {
+export const getPathForTab = (tab: ActiveTab, articleSlug?: string | null): string => {
+  if (tab === 'blog' && articleSlug) {
+    return `/blog/${articleSlug}/`;
+  }
   if (tab === 'home') return '/';
+  if (tab === 'not-found') return '/404/';
   return `/${tab}/`;
+};
+
+/**
+ * Extracts blog slug from path if currently on a blog article route
+ */
+export const getBlogSlugFromPath = (rawPathOrHash: string): string | null => {
+  if (!rawPathOrHash) return null;
+  const path = rawPathOrHash.replace(/^[#/]+|[#/]+$/g, '').trim();
+  const parts = path.split('/');
+  if (parts[0] === 'blog' && parts[1]) {
+    return parts[1];
+  }
+  return null;
 };
 
 /**
@@ -223,24 +262,30 @@ export const getTabForPath = (rawPathOrHash: string): ActiveTab => {
   const clean = rawPathOrHash.replace(/^[#/]+|[#/]+$/g, '').trim().toLowerCase();
   if (!clean || clean === 'home') return 'home';
 
+  const parts = clean.split('/');
+  const root = parts[0];
+
+  if (root === 'blog') {
+    return 'blog';
+  }
+
+  if (root === '404') {
+    return 'not-found';
+  }
+
   const validTabs: ActiveTab[] = [
     'home', 'compress', 'crop', 'rotate', 'convert', 'resize', 'pdf',
-    'watermark', 'filter', 'guide', 'about', 'contact', 'privacy',
+    'watermark', 'filter', 'guide', 'blog', 'about', 'contact', 'privacy',
     'terms', 'cookies', 'faq', 'pricing', 'coming-soon'
   ];
 
-  return validTabs.includes(clean as ActiveTab) ? (clean as ActiveTab) : 'home';
+  return validTabs.includes(root as ActiveTab) ? (root as ActiveTab) : 'not-found';
 };
 
 /**
  * Dynamically updates document title, canonical link, meta tags, and structured JSON-LD
  */
-export const updatePageSeo = (tab: ActiveTab): void => {
-  const seo = SEO_DATA[tab] || SEO_DATA.home;
-
-  // Title
-  document.title = seo.title;
-
+export const updatePageSeo = (tab: ActiveTab, activeArticle?: BlogArticle | null): void => {
   // Helper for setting or updating meta tag
   const setMeta = (attrName: 'name' | 'property', attrValue: string, content: string) => {
     let el = document.querySelector(`meta[${attrName}="${attrValue}"]`) as HTMLMetaElement | null;
@@ -252,31 +297,134 @@ export const updatePageSeo = (tab: ActiveTab): void => {
     el.setAttribute('content', content);
   };
 
-  // Standard Meta Description
-  setMeta('name', 'description', seo.description);
+  // Helper for canonical link tag
+  const setCanonical = (href: string) => {
+    let canonicalEl = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonicalEl) {
+      canonicalEl = document.createElement('link');
+      canonicalEl.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalEl);
+    }
+    canonicalEl.setAttribute('href', href);
+  };
 
-  // Canonical link tag
-  let canonicalEl = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-  if (!canonicalEl) {
-    canonicalEl = document.createElement('link');
-    canonicalEl.setAttribute('rel', 'canonical');
-    document.head.appendChild(canonicalEl);
+  // Handle individual blog article SEO
+  if (tab === 'blog' && activeArticle) {
+    const articleCanonical = `${CANONICAL_DOMAIN}/blog/${activeArticle.slug}/`;
+
+    document.title = activeArticle.seoTitle;
+    setMeta('name', 'description', activeArticle.metaDescription);
+    setCanonical(articleCanonical);
+
+    setMeta('property', 'og:title', activeArticle.seoTitle);
+    setMeta('property', 'og:description', activeArticle.metaDescription);
+    setMeta('property', 'og:url', articleCanonical);
+    setMeta('property', 'og:type', 'article');
+    setMeta('property', 'og:site_name', 'Pixminify');
+
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', activeArticle.seoTitle);
+    setMeta('name', 'twitter:description', activeArticle.metaDescription);
+
+    // Article + FAQ Schema
+    let schemaScript = document.getElementById('pixminify-schema') as HTMLScriptElement | null;
+    if (!schemaScript) {
+      schemaScript = document.createElement('script');
+      schemaScript.id = 'pixminify-schema';
+      schemaScript.type = 'application/ld+json';
+      document.head.appendChild(schemaScript);
+    }
+
+    const schemas: any[] = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        mainEntityOfPage: {
+          '@type': 'WebPage',
+          '@id': articleCanonical,
+        },
+        headline: activeArticle.title,
+        description: activeArticle.metaDescription,
+        author: {
+          '@type': 'Organization',
+          name: activeArticle.author.name,
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'Pixminify',
+          url: CANONICAL_DOMAIN,
+          logo: {
+            '@type': 'ImageObject',
+            url: `${CANONICAL_DOMAIN}/logo.png`,
+          },
+        },
+        datePublished: '2026-08-24',
+        dateModified: '2026-08-24',
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Home',
+            item: `${CANONICAL_DOMAIN}/`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Blog',
+            item: `${CANONICAL_DOMAIN}/blog/`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: activeArticle.title,
+            item: articleCanonical,
+          },
+        ],
+      },
+    ];
+
+    // Add FAQ schema if FAQs exist
+    if (activeArticle.faqs && activeArticle.faqs.length > 0) {
+      schemas.push({
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: activeArticle.faqs.map((faq) => ({
+          '@type': 'Question',
+          name: faq.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.answer,
+          },
+        })),
+      });
+    }
+
+    schemaScript.textContent = JSON.stringify(schemas);
+    return;
   }
-  canonicalEl.setAttribute('href', seo.canonical);
 
-  // Open Graph
+  // Standard Page SEO
+  const seo = SEO_DATA[tab] || SEO_DATA.home;
+
+  document.title = seo.title;
+  setMeta('name', 'description', seo.description);
+  setCanonical(seo.canonical);
+
   setMeta('property', 'og:title', seo.ogTitle);
   setMeta('property', 'og:description', seo.ogDescription);
   setMeta('property', 'og:url', seo.ogUrl);
   setMeta('property', 'og:type', 'website');
   setMeta('property', 'og:site_name', 'Pixminify');
 
-  // Twitter Card
   setMeta('name', 'twitter:card', 'summary_large_image');
   setMeta('name', 'twitter:title', seo.ogTitle);
   setMeta('name', 'twitter:description', seo.ogDescription);
 
-  // JSON-LD Structured Data for Rich Search Results
+  // Structured JSON-LD for WebApplication
   let schemaScript = document.getElementById('pixminify-schema') as HTMLScriptElement | null;
   if (!schemaScript) {
     schemaScript = document.createElement('script');
@@ -307,6 +455,7 @@ export const updatePageSeo = (tab: ActiveTab): void => {
       'Multi-image to PDF builder',
       'Text and logo watermarking',
       'Real-time filter and color adjustments',
+      'Comprehensive educational guides and tutorials',
     ],
   };
 
