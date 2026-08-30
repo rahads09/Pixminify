@@ -13,11 +13,15 @@ import { WatermarkTool } from './components/WatermarkTool';
 import { FiltersTool } from './components/FiltersTool';
 import { SocialResizerTool } from './components/SocialResizerTool';
 import { FormatConverterTool } from './components/FormatConverterTool';
+import { BackgroundRemoverTool } from './components/BackgroundRemoverTool';
+import { AiUpscalerTool } from './components/AiUpscalerTool';
+import { OcrTool } from './components/OcrTool';
 import { FormatGuide } from './components/FormatGuide';
 import { Footer } from './components/Footer';
 import { InfoModal, ModalType } from './components/InfoModal';
 import { AdBanner } from './components/AdBanner';
 import { ToolSeoSection } from './components/ToolSeoSection';
+import { ToolUploadPage } from './components/ToolUploadPage';
 import { BlogHomePage } from './components/blog/BlogHomePage';
 import { BlogArticlePage } from './components/blog/BlogArticlePage';
 import { ComingSoonPage } from './components/pages/ComingSoonPage';
@@ -29,10 +33,12 @@ import { CookiesPage } from './components/pages/CookiesPage';
 import { FaqPage } from './components/pages/FaqPage';
 import { PricingPage } from './components/pages/PricingPage';
 import { NotFoundPage } from './components/pages/NotFoundPage';
+import { ResultPage } from './components/ResultPage';
 import {
   ActiveTab,
   CompressionSettings,
   ProcessedImage,
+  ToolResultData,
 } from './types';
 import { DEFAULT_SETTINGS } from './utils/presets';
 import {
@@ -62,6 +68,13 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [compareItem, setCompareItem] = useState<ProcessedImage | null>(null);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [toolHasImage, setToolHasImage] = useState<boolean>(false);
+  const [activeResult, setActiveResult] = useState<ToolResultData | null>(null);
+
+  const handleShowResult = useCallback((resultData: ToolResultData) => {
+    setActiveResult(resultData);
+    handleNavigate('result');
+  }, []);
 
   // Sync state with URL path/hash & browser back/forward buttons
   useEffect(() => {
@@ -76,6 +89,7 @@ export default function App() {
       const slug = getBlogSlugFromPath(currentRaw);
       setActiveTab(tab);
       setActiveBlogSlug(slug);
+      setToolHasImage(false);
       const currentArticle = slug ? getArticleBySlug(slug) : null;
       updatePageSeo(tab, currentArticle);
     };
@@ -98,6 +112,9 @@ export default function App() {
   }, [activeTab, activeBlogSlug]);
 
   const handleNavigate = (tab: ActiveTab, slug: string | null = null) => {
+    if (tab !== activeTab) {
+      setToolHasImage(false);
+    }
     setActiveTab(tab);
     setActiveBlogSlug(slug);
     const newPath = getPathForTab(tab, slug);
@@ -212,6 +229,24 @@ export default function App() {
     setItems([]);
   };
 
+  const isToolTab = [
+    'compress',
+    'crop',
+    'rotate',
+    'resize',
+    'convert',
+    'watermark',
+    'filter',
+    'background-remover',
+    'bg-remover',
+    'upscaler',
+    'ocr',
+    'pdf',
+  ].includes(activeTab);
+
+  const currentToolHasImage = activeTab === 'compress' ? items.length > 0 : toolHasImage;
+  const showFooter = !isToolTab || currentToolHasImage;
+
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col selection:bg-blue-600 selection:text-white">
       {/* Top Header Navigation with 9-Dot Launcher and Modal callback */}
@@ -227,6 +262,10 @@ export default function App() {
         {/* Helper breadcrumb for tool pages */}
         {activeTab !== 'home' &&
           [
+            'background-remover',
+            'bg-remover',
+            'upscaler',
+            'ocr',
             'compress',
             'crop',
             'rotate',
@@ -260,117 +299,223 @@ export default function App() {
           <HomePage onSelectTool={handleNavigate} />
         )}
 
+        {/* AI Background Remover Tab */}
+        {(activeTab === 'background-remover' || activeTab === 'bg-remover') && (
+          <div className="space-y-12 animate-in fade-in duration-200">
+            <BackgroundRemoverTool onHasImageChange={setToolHasImage} onShowResult={handleShowResult} />
+            {toolHasImage && (
+              <>
+                <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
+                <ToolSeoSection tab="background-remover" onSelectTab={handleNavigate} />
+              </>
+            )}
+          </div>
+        )}
+
+        {/* AI Image Upscaler Tab */}
+        {activeTab === 'upscaler' && (
+          <div className="space-y-12 animate-in fade-in duration-200">
+            <AiUpscalerTool onHasImageChange={setToolHasImage} onShowResult={handleShowResult} />
+            {toolHasImage && (
+              <>
+                <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
+                <ToolSeoSection tab="upscaler" onSelectTab={handleNavigate} />
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Image to Text (OCR) Tab */}
+        {activeTab === 'ocr' && (
+          <div className="space-y-12 animate-in fade-in duration-200">
+            <OcrTool onHasImageChange={setToolHasImage} onShowResult={handleShowResult} />
+            {toolHasImage && (
+              <>
+                <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
+                <ToolSeoSection tab="ocr" onSelectTab={handleNavigate} />
+              </>
+            )}
+          </div>
+        )}
+
         {/* Compress Tab (Primary Minification Studio) */}
         {activeTab === 'compress' && (
-          <div className="space-y-8 animate-in fade-in duration-200">
-            {/* Header banner */}
-            <div className="text-center max-w-3xl mx-auto space-y-3">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
-                <span>⚡ Next-Generation In-Browser Optimization</span>
+          items.length === 0 ? (
+            <ToolUploadPage
+              title="Compress Image"
+              subtitle="Reduce image file size quickly while maintaining quality."
+              acceptedFormats="Supports JPG, PNG, WebP, AVIF"
+              accept="image/png,image/jpeg,image/webp,image/avif"
+              multiple={true}
+              buttonText="Upload Images"
+              accentColor="blue"
+              onImageSelected={handleFilesAdded}
+            />
+          ) : (
+            <div className="space-y-8 animate-in fade-in duration-200">
+              {/* Header banner */}
+              <div className="flex items-center justify-between flex-wrap gap-4 p-6 rounded-2xl bg-white border border-slate-200 shadow-xs">
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                    Compress Images Online
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-600">
+                    {items.length} {items.length === 1 ? 'image' : 'images'} in queue
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <label
+                    htmlFor="add-more-compress-input"
+                    className="btn-interactive px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold cursor-pointer border border-blue-200 transition-all"
+                  >
+                    + Add More
+                  </label>
+                  <input
+                    id="add-more-compress-input"
+                    type="file"
+                    multiple
+                    accept="image/png,image/jpeg,image/webp,image/avif"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files) handleFilesAdded(Array.from(e.target.files));
+                    }}
+                  />
+                  <button
+                    onClick={handleClearAll}
+                    className="btn-interactive px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer transition-all"
+                  >
+                    Clear All
+                  </button>
+                </div>
               </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-                Compress Images Online
-              </h1>
-              <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                Compress JPG, PNG, WebP, and AVIF images up to 93% smaller without quality loss. 100% private in-browser optimization.
-              </p>
+
+              {/* Global Settings Bar */}
+              <GlobalSettingsBar
+                settings={settings}
+                onChangeSettings={setSettings}
+                onApplyToAll={handleApplyToAll}
+                itemCount={items.length}
+                isProcessing={isProcessing}
+              />
+
+              {/* Image Queue List & Summary */}
+              <ImageList
+                items={items}
+                onRemoveItem={handleRemoveItem}
+                onClearAll={handleClearAll}
+                onOpenCompare={(item) => setCompareItem(item)}
+                isProcessing={isProcessing}
+                onShowResult={handleShowResult}
+              />
+
+              {/* SEO Content Section */}
+              <div className="pt-8">
+                <AdBanner format="horizontal" className="max-w-5xl mx-auto mb-8" />
+                <ToolSeoSection tab="compress" onSelectTab={handleNavigate} />
+              </div>
             </div>
-
-            {/* Drop Zone */}
-            <DropZone
-              onFilesAdded={handleFilesAdded}
-              onLoadSample={handleLoadSample}
-              disabled={isProcessing}
-            />
-
-            {/* Google Ads Placement */}
-            <AdBanner format="horizontal" className="max-w-4xl mx-auto my-2" />
-
-            {/* Global Settings Bar */}
-            <GlobalSettingsBar
-              settings={settings}
-              onChangeSettings={setSettings}
-              onApplyToAll={handleApplyToAll}
-              itemCount={items.length}
-              isProcessing={isProcessing}
-            />
-
-            {/* Image Queue List & Summary */}
-            <ImageList
-              items={items}
-              onRemoveItem={handleRemoveItem}
-              onClearAll={handleClearAll}
-              onOpenCompare={(item) => setCompareItem(item)}
-              isProcessing={isProcessing}
-            />
-
-            {/* SEO Content Section */}
-            <div className="pt-8">
-              <ToolSeoSection tab="compress" onSelectTab={handleNavigate} />
-            </div>
-          </div>
+          )
         )}
 
         {/* Crop Tool Tab */}
         {activeTab === 'crop' && (
           <div className="space-y-12 animate-in fade-in duration-200">
-            <CropTool />
-            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
-            <ToolSeoSection tab="crop" onSelectTab={handleNavigate} />
+            <CropTool onHasImageChange={setToolHasImage} onShowResult={handleShowResult} />
+            {toolHasImage && (
+              <>
+                <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
+                <ToolSeoSection tab="crop" onSelectTab={handleNavigate} />
+              </>
+            )}
           </div>
         )}
 
         {/* Rotate Tool Tab */}
         {activeTab === 'rotate' && (
           <div className="space-y-12 animate-in fade-in duration-200">
-            <RotateTool />
-            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
-            <ToolSeoSection tab="rotate" onSelectTab={handleNavigate} />
+            <RotateTool onHasImageChange={setToolHasImage} onShowResult={handleShowResult} />
+            {toolHasImage && (
+              <>
+                <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
+                <ToolSeoSection tab="rotate" onSelectTab={handleNavigate} />
+              </>
+            )}
           </div>
         )}
 
         {/* Image to PDF Tool Tab */}
         {activeTab === 'pdf' && (
           <div className="space-y-12 animate-in fade-in duration-200">
-            <ImageToPdfTool />
-            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
-            <ToolSeoSection tab="pdf" onSelectTab={handleNavigate} />
+            <ImageToPdfTool onHasImageChange={setToolHasImage} onShowResult={handleShowResult} />
+            {toolHasImage && (
+              <>
+                <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
+                <ToolSeoSection tab="pdf" onSelectTab={handleNavigate} />
+              </>
+            )}
           </div>
         )}
 
         {/* Watermark Tool Tab */}
         {activeTab === 'watermark' && (
           <div className="space-y-12 animate-in fade-in duration-200">
-            <WatermarkTool />
-            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
-            <ToolSeoSection tab="watermark" onSelectTab={handleNavigate} />
+            <WatermarkTool onHasImageChange={setToolHasImage} onShowResult={handleShowResult} />
+            {toolHasImage && (
+              <>
+                <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
+                <ToolSeoSection tab="watermark" onSelectTab={handleNavigate} />
+              </>
+            )}
           </div>
         )}
 
         {/* Color & Filter Tool Tab */}
         {activeTab === 'filter' && (
           <div className="space-y-12 animate-in fade-in duration-200">
-            <FiltersTool />
-            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
-            <ToolSeoSection tab="filter" onSelectTab={handleNavigate} />
+            <FiltersTool onHasImageChange={setToolHasImage} onShowResult={handleShowResult} />
+            {toolHasImage && (
+              <>
+                <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
+                <ToolSeoSection tab="filter" onSelectTab={handleNavigate} />
+              </>
+            )}
           </div>
         )}
 
         {/* Convert Format Tab */}
         {activeTab === 'convert' && (
           <div className="space-y-12 animate-in fade-in duration-200">
-            <FormatConverterTool onLoadSample={handleLoadSample} />
-            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
-            <ToolSeoSection tab="convert" onSelectTab={handleNavigate} />
+            <FormatConverterTool onLoadSample={handleLoadSample} onHasImageChange={setToolHasImage} onShowResult={handleShowResult} />
+            {toolHasImage && (
+              <>
+                <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
+                <ToolSeoSection tab="convert" onSelectTab={handleNavigate} />
+              </>
+            )}
           </div>
         )}
 
         {/* Resize Social Tab */}
         {activeTab === 'resize' && (
           <div className="space-y-12 animate-in fade-in duration-200">
-            <SocialResizerTool />
-            <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
-            <ToolSeoSection tab="resize" onSelectTab={handleNavigate} />
+            <SocialResizerTool onHasImageChange={setToolHasImage} onShowResult={handleShowResult} />
+            {toolHasImage && (
+              <>
+                <AdBanner format="horizontal" className="max-w-5xl mx-auto" />
+                <ToolSeoSection tab="resize" onSelectTab={handleNavigate} />
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Universal Download / Result Tab */}
+        {(activeTab === 'result' || activeTab === 'download') && (
+          <div className="animate-in fade-in duration-200">
+            <ResultPage
+              result={activeResult}
+              onSelectTab={handleNavigate}
+            />
           </div>
         )}
 
@@ -466,10 +611,12 @@ export default function App() {
       )}
 
       {/* Footer matching requested reference design */}
-      <Footer
-        onSelectTab={handleNavigate}
-        onOpenModal={(type) => handleNavigate(type as ActiveTab)}
-      />
+      {showFooter && (
+        <Footer
+          onSelectTab={handleNavigate}
+          onOpenModal={(type) => handleNavigate(type as ActiveTab)}
+        />
+      )}
     </div>
   );
 }

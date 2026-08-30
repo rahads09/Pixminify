@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { loadImageElement, formatBytes } from '../utils/imageProcessor';
+import { ToolUploadPage } from './ToolUploadPage';
+import { ToolResultData } from '../types';
 
 interface PdfImageItem {
   id: string;
@@ -25,7 +27,12 @@ interface PdfImageItem {
   size: number;
 }
 
-export const ImageToPdfTool: React.FC = () => {
+export interface ImageToPdfToolProps {
+  onHasImageChange?: (hasImage: boolean) => void;
+  onShowResult?: (result: ToolResultData) => void;
+}
+
+export const ImageToPdfTool: React.FC<ImageToPdfToolProps> = ({ onHasImageChange, onShowResult }) => {
   const [images, setImages] = useState<PdfImageItem[]>([]);
   const [orientation, setOrientation] = useState<'portrait' | 'landscape' | 'auto'>('portrait');
   const [pageSize, setPageSize] = useState<'a4' | 'letter' | 'fit'>('a4');
@@ -34,6 +41,10 @@ export const ImageToPdfTool: React.FC = () => {
   const [showPageNumbers, setShowPageNumbers] = useState<boolean>(true);
   const [pdfFileName, setPdfFileName] = useState<string>('pixminify_document');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    onHasImageChange?.(images.length > 0);
+  }, [images.length, onHasImageChange]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -210,7 +221,33 @@ export const ImageToPdfTool: React.FC = () => {
       }
 
       if (doc) {
-        doc.save(`${pdfFileName.trim() || 'pixminify_document'}.pdf`);
+        const fileName = `${pdfFileName.trim() || 'pixminify_document'}.pdf`;
+        const pdfBlob = doc.output('blob');
+
+        if (onShowResult) {
+          onShowResult({
+            toolId: 'pdf',
+            toolName: 'Image to PDF',
+            fileName,
+            fileType: 'application/pdf',
+            fileSize: pdfBlob.size,
+            blob: pdfBlob,
+            previewUrl: images[0]?.previewUrl,
+            details: [
+              { label: 'Pages', value: `${images.length} pages` },
+              { label: 'Page Size', value: pageSize.toUpperCase() },
+              { label: 'Orientation', value: orientation.charAt(0).toUpperCase() + orientation.slice(1) },
+            ],
+            onResetTool: () => {
+              setImages([]);
+            },
+            onBackToWorkspace: () => {
+              // Keep PDF workspace
+            },
+          });
+        } else {
+          doc.save(fileName);
+        }
       }
     } catch (error) {
       console.error('PDF generation failed:', error);
@@ -219,20 +256,46 @@ export const ImageToPdfTool: React.FC = () => {
     }
   };
 
+  if (images.length === 0) {
+    return (
+      <ToolUploadPage
+        title="Image to PDF"
+        subtitle="Convert your image into a downloadable PDF."
+        acceptedFormats="Supports JPG, PNG, WebP, AVIF"
+        accept="image/*"
+        multiple={true}
+        accentColor="rose"
+        buttonText="Upload Images"
+        onImageSelected={(files) => {
+          handleFilesAdded(files as any);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Tool Header */}
-      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs">
-        <div className="flex items-center space-x-2 text-rose-600 text-xs font-semibold uppercase tracking-wider mb-1">
-          <FileText className="w-4 h-4" />
-          <span>Image to PDF Document Generator</span>
+      {/* Workspace Header */}
+      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <div className="flex items-center space-x-2 text-rose-600 text-xs font-semibold uppercase tracking-wider mb-1">
+            <FileText className="w-4 h-4" />
+            <span>Image to PDF Document Generator</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Convert Images to a Single Multi-Page PDF
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+            {images.length} {images.length === 1 ? 'page' : 'pages'} ready to merge
+          </p>
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-          Convert Images to a Single Multi-Page PDF
-        </h2>
-        <p className="text-sm text-slate-600 mt-1">
-          Combine photos, scans, receipts or presentation slides into a professional, compressed PDF with custom layouts.
-        </p>
+
+        <button
+          onClick={() => setImages([])}
+          className="btn-interactive px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all cursor-pointer"
+        >
+          Clear All Images
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

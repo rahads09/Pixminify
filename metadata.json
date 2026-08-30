@@ -1,6 +1,6 @@
 {
-  "name": "Pixminify - Smart Image Compressor & Optimizer",
-  "description": "Next-generation in-browser image compression, format conversion (WebP, AVIF, JPEG, PNG), smart resizing, and side-by-side quality comparison.",
+  "name": "Pixminify - Free Online Image Tools",
+  "description": "All-in-one free in-browser image optimization suite. Compress, crop, resize, rotate, convert, watermark, and create PDFs with zero server uploads.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

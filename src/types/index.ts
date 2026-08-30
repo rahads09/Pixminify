@@ -61,6 +61,12 @@ export type ActiveTab =
   | 'pdf'
   | 'watermark'
   | 'filter'
+  | 'bg-remover'
+  | 'background-remover'
+  | 'upscaler'
+  | 'ocr'
+  | 'result'
+  | 'download'
   | 'guide'
   | 'blog'
   | 'about'
@@ -72,6 +78,31 @@ export type ActiveTab =
   | 'pricing'
   | 'coming-soon'
   | 'not-found';
+
+export interface ToolResultDetail {
+  label: string;
+  value: string;
+}
+
+export interface ToolResultData {
+  toolId: ActiveTab;
+  toolName: string;
+  toolRoute?: string;
+  fileName: string;
+  fileType: string;
+  fileSize?: number;
+  blob?: Blob;
+  downloadUrl?: string;
+  extractedText?: string;
+  previewUrl?: string;
+  dimensions?: { width: number; height: number };
+  savingsPercentage?: number;
+  originalSize?: number;
+  details?: ToolResultDetail[];
+  onDownload?: () => void;
+  onResetTool?: () => void;
+  onBackToWorkspace?: () => void;
+}
 
 export type BlogCategory =
   | 'Image Compression'

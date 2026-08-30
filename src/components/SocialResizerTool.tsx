@@ -1,24 +1,31 @@
-import React, { useState, useRef } from 'react';
-import { Maximize2, UploadCloud, Check, FileArchive } from 'lucide-react';
+import React, { useState } from 'react';
+import { Maximize2, Check, FileArchive } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { SOCIAL_PRESETS } from '../utils/presets';
-import { ResizePreset } from '../types';
+import { ResizePreset, ToolResultData } from '../types';
 import { loadImageElement, formatBytes } from '../utils/imageProcessor';
+import { ToolUploadPage } from './ToolUploadPage';
 
-export const SocialResizerTool: React.FC = () => {
+export interface SocialResizerToolProps {
+  onHasImageChange?: (hasImage: boolean) => void;
+  onShowResult?: (result: ToolResultData) => void;
+}
+
+export const SocialResizerTool: React.FC<SocialResizerToolProps> = ({ onHasImageChange, onShowResult }) => {
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [selectedPresets, setSelectedPresets] = useState<string[]>(['ig-square', 'ig-story', 'yt-thumb', 'x-post']);
   const [isGenerating, setIsGenerating] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSourceFile(file);
-      setSourceImage(URL.createObjectURL(file));
-    }
+  React.useEffect(() => {
+    onHasImageChange?.(Boolean(sourceImage));
+  }, [sourceImage, onHasImageChange]);
+
+  const handleProcessFile = (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setSourceFile(file);
+    setSourceImage(URL.createObjectURL(file));
   };
 
   const togglePreset = (id: string) => {
@@ -74,7 +81,32 @@ export const SocialResizerTool: React.FC = () => {
       }
 
       const zipBlob = await zip.generateAsync({ type: 'blob' });
-      saveAs(zipBlob, `pixminify_social_bundle_${Date.now()}.zip`);
+      const fileName = `pixminify_social_bundle_${Date.now()}.zip`;
+
+      if (onShowResult) {
+        onShowResult({
+          toolId: 'resize',
+          toolName: 'Resize Image',
+          fileName,
+          fileType: 'application/zip',
+          fileSize: zipBlob.size,
+          blob: zipBlob,
+          previewUrl: sourceImage || undefined,
+          details: [
+            { label: 'Presets Included', value: `${selectedPresets.length} dimensions` },
+            { label: 'Package Type', value: 'ZIP Archive' },
+          ],
+          onResetTool: () => {
+            setSourceImage(null);
+            setSourceFile(null);
+          },
+          onBackToWorkspace: () => {
+            // Keep workspace
+          },
+        });
+      } else {
+        saveAs(zipBlob, fileName);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -82,16 +114,24 @@ export const SocialResizerTool: React.FC = () => {
     }
   };
 
+  if (!sourceImage) {
+    return (
+      <ToolUploadPage
+        title="Resize Image"
+        subtitle="Resize your image quickly while keeping the right proportions."
+        acceptedFormats="Supports JPG, PNG, WebP, AVIF"
+        accept="image/*"
+        accentColor="sky"
+        buttonText="Upload Image"
+        onImageSelected={(files) => {
+          if (files[0]) handleProcessFile(files[0]);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="w-full space-y-6">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-
       {/* Header section */}
       <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -107,61 +147,45 @@ export const SocialResizerTool: React.FC = () => {
           </p>
         </div>
 
-        {sourceImage && (
-          <button
-            onClick={handleDownloadAllSelected}
-            disabled={isGenerating || selectedPresets.length === 0}
-            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-xs flex items-center space-x-2 transition-all active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
-          >
-            <FileArchive className="w-4 h-4" />
-            <span>
-              {isGenerating
-                ? 'Generating...'
-                : `Download Bundle (${selectedPresets.length})`}
-            </span>
-          </button>
-        )}
+        <button
+          onClick={handleDownloadAllSelected}
+          disabled={isGenerating || selectedPresets.length === 0}
+          className="btn-interactive px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-xs flex items-center space-x-2 transition-all active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
+        >
+          <FileArchive className="w-4 h-4" />
+          <span>
+            {isGenerating
+              ? 'Generating...'
+              : `Download Bundle (${selectedPresets.length})`}
+          </span>
+        </button>
       </div>
 
-      {/* Upload or Preview Area */}
-      {!sourceImage ? (
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className="p-12 rounded-2xl border-2 border-dashed border-blue-300 hover:border-blue-500 bg-white hover:bg-slate-50 text-center cursor-pointer transition-all flex flex-col items-center justify-center shadow-xs"
-        >
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center mb-4 shadow-xs">
-            <UploadCloud className="w-8 h-8" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 mb-1">
-            Upload Master Image to Resize
-          </h3>
-          <p className="text-xs text-slate-600 max-w-sm">
-            Upload a high-resolution photo for crisp output across all platforms.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* Source photo banner */}
-          <div className="p-4 rounded-xl bg-white border border-slate-200 flex items-center justify-between shadow-xs">
-            <div className="flex items-center space-x-3">
-              <img src={sourceImage} alt="Master source" className="w-12 h-12 rounded-lg object-cover border border-slate-200" />
-              <div>
-                <div className="text-sm font-bold text-slate-900">{sourceFile?.name}</div>
-                <div className="text-xs text-slate-500 font-mono">
-                  {sourceFile ? formatBytes(sourceFile.size) : ''}
-                </div>
+      <div className="space-y-6">
+        {/* Source photo banner */}
+        <div className="p-4 rounded-xl bg-white border border-slate-200 flex items-center justify-between shadow-xs">
+          <div className="flex items-center space-x-3">
+            <img src={sourceImage} alt="Master source" className="w-12 h-12 rounded-lg object-cover border border-slate-200" />
+            <div>
+              <div className="text-sm font-bold text-slate-900">{sourceFile?.name}</div>
+              <div className="text-xs text-slate-500 font-mono">
+                {sourceFile ? formatBytes(sourceFile.size) : ''}
               </div>
             </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
-            >
-              Change Image
-            </button>
           </div>
+          <button
+            onClick={() => {
+              setSourceImage(null);
+              setSourceFile(null);
+            }}
+            className="btn-interactive px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
+          >
+            Change Image
+          </button>
+        </div>
 
-          {/* Presets Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {/* Presets Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {SOCIAL_PRESETS.map((preset) => {
               const isSelected = selectedPresets.includes(preset.id);
               return (
@@ -201,7 +225,6 @@ export const SocialResizerTool: React.FC = () => {
             })}
           </div>
         </div>
-      )}
-    </div>
+      </div>
   );
 };

@@ -1,21 +1,30 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   RotateCw,
   RotateCcw,
   FlipHorizontal,
   FlipVertical,
   Download,
-  UploadCloud,
   RefreshCw,
-  Sparkles,
 } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import { loadImageElement, formatBytes } from '../utils/imageProcessor';
+import { ToolUploadPage } from './ToolUploadPage';
+import { ToolResultData } from '../types';
 
-export const RotateTool: React.FC = () => {
+export interface RotateToolProps {
+  onHasImageChange?: (hasImage: boolean) => void;
+  onShowResult?: (result: ToolResultData) => void;
+}
+
+export const RotateTool: React.FC<RotateToolProps> = ({ onHasImageChange, onShowResult }) => {
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [imgNaturalSize, setImgNaturalSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+
+  useEffect(() => {
+    onHasImageChange?.(Boolean(sourceImage));
+  }, [sourceImage, onHasImageChange]);
 
   // Transforms
   const [rotationAngle, setRotationAngle] = useState(0); // in degrees (0, 90, 180, 270 or arbitrary)
@@ -30,19 +39,15 @@ export const RotateTool: React.FC = () => {
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleProcessFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setSourceFile(file);
+    const url = URL.createObjectURL(file);
+    setSourceImage(url);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSourceFile(file);
-      const url = URL.createObjectURL(file);
-      setSourceImage(url);
-
-      const img = await loadImageElement(file);
-      setImgNaturalSize({ w: img.naturalWidth || img.width, h: img.naturalHeight || img.height });
-      resetTransforms();
-    }
+    const img = await loadImageElement(file);
+    setImgNaturalSize({ w: img.naturalWidth || img.width, h: img.naturalHeight || img.height });
+    resetTransforms();
   };
 
   const resetTransforms = () => {
@@ -132,54 +137,86 @@ export const RotateTool: React.FC = () => {
     if (!resultBlob || !sourceFile) return;
     const baseName = sourceFile.name.substring(0, sourceFile.name.lastIndexOf('.')) || sourceFile.name;
     const ext = outputFormat === 'image/png' ? 'png' : outputFormat === 'image/webp' ? 'webp' : 'jpg';
-    saveAs(resultBlob, `rotated_${baseName}.${ext}`);
+    const fileName = `rotated_${baseName}.${ext}`;
+
+    if (onShowResult) {
+      onShowResult({
+        toolId: 'rotate',
+        toolName: 'Rotate Image',
+        fileName,
+        fileType: outputFormat,
+        fileSize: resultBlob.size,
+        blob: resultBlob,
+        previewUrl: resultUrl || undefined,
+        dimensions: imgNaturalSize.w && imgNaturalSize.h ? { width: imgNaturalSize.w, height: imgNaturalSize.h } : undefined,
+        details: [
+          { label: 'Rotation Angle', value: `${(rotationAngle + fineAngle) % 360}°` },
+          { label: 'Output Format', value: outputFormat.replace('image/', '').toUpperCase() },
+        ],
+        onResetTool: () => {
+          setSourceImage(null);
+          setSourceFile(null);
+          setResultBlob(null);
+          setResultUrl(null);
+          resetTransforms();
+        },
+        onBackToWorkspace: () => {
+          // Keep current rotate workspace
+        },
+      });
+    } else {
+      saveAs(resultBlob, fileName);
+    }
   };
+
+  if (!sourceImage) {
+    return (
+      <ToolUploadPage
+        title="Rotate Image"
+        subtitle="Rotate or flip your image in seconds."
+        acceptedFormats="Supports JPG, PNG, WebP, AVIF"
+        accept="image/*"
+        accentColor="indigo"
+        buttonText="Upload Image"
+        onImageSelected={(files) => {
+          if (files[0]) handleProcessFile(files[0]);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs">
-        <div className="flex items-center space-x-2 text-indigo-600 text-xs font-semibold uppercase tracking-wider mb-1">
-          <RotateCw className="w-4 h-4" />
-          <span>Rotate & Flip Studio</span>
+      {/* Workspace Header */}
+      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <div className="flex items-center space-x-2 text-indigo-600 text-xs font-semibold uppercase tracking-wider mb-1">
+            <RotateCw className="w-4 h-4" />
+            <span>Rotate & Flip Studio</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Rotate, Straighten & Flip Images
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+            {sourceFile?.name} • {imgNaturalSize.w} × {imgNaturalSize.h}px • {sourceFile && formatBytes(sourceFile.size)}
+          </p>
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-          Rotate, Straighten & Flip Images
-        </h2>
-        <p className="text-sm text-slate-600 mt-1">
-          Instantly fix upside down or sideways photos with 90° clockwise/counter-clockwise turns, custom straightening, and mirroring.
-        </p>
+
+        <button
+          onClick={() => {
+            setSourceImage(null);
+            setSourceFile(null);
+            setResultBlob(null);
+            setResultUrl(null);
+            resetTransforms();
+          }}
+          className="btn-interactive px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all cursor-pointer"
+        >
+          Change Image
+        </button>
       </div>
 
-      {!sourceImage ? (
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-indigo-300 hover:border-indigo-500 bg-white hover:bg-slate-50 rounded-2xl p-12 text-center transition-all cursor-pointer shadow-xs group flex flex-col items-center justify-center space-y-4"
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white flex items-center justify-center transition-all shadow-xs group-hover:scale-105">
-            <UploadCloud className="w-8 h-8" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">
-              Select or Drop an Image to Rotate
-            </h3>
-            <p className="text-xs text-slate-600 max-w-sm">
-              Supports JPEG, PNG, WebP, and AVIF formats.
-            </p>
-          </div>
-          <button className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer">
-            Browse File
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Visual Stage (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
             <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
@@ -339,7 +376,6 @@ export const RotateTool: React.FC = () => {
             </button>
           </div>
         </div>
-      )}
-    </div>
+      </div>
   );
 };

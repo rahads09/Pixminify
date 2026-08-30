@@ -48,11 +48,16 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onOpenModal }) => {
             <a
               href="/"
               onClick={(e) => handleToolClick(e, 'home')}
-              className="inline-flex items-center space-x-2 text-white font-black text-xl tracking-tight hover:opacity-90 transition-opacity"
+              className="inline-flex items-center space-x-2.5 text-white font-black text-xl tracking-tight hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg"
+              aria-label="Pixminify"
             >
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm">
-                <Zap className="w-4 h-4 fill-current text-white" />
-              </div>
+              <img
+                src="/pixminify-logo.png"
+                alt="Pixminify"
+                className="h-7 w-7 sm:h-8 sm:w-8 object-contain shrink-0"
+                loading="lazy"
+                decoding="async"
+              />
               <span className="text-xl font-black tracking-tight text-white">
                 Pixminify
               </span>
@@ -70,12 +75,40 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onOpenModal }) => {
 
         {/* Main 5-Column Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-10 text-sm">
-          {/* IMAGE TOOLS Column */}
+          {/* AI & IMAGE TOOLS Column */}
           <div className="space-y-4">
-            <h3 className="font-bold text-white uppercase tracking-wider text-xs sm:text-sm">
-              IMAGE TOOLS
+            <h3 className="font-bold text-white uppercase tracking-wider text-xs sm:text-sm flex items-center space-x-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+              <span>AI IMAGE TOOLS</span>
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-sm">
+              <li>
+                <a
+                  href="/background-remover/"
+                  onClick={(e) => handleToolClick(e, 'background-remover')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block font-medium text-blue-400"
+                >
+                  AI Background Remover
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/upscaler/"
+                  onClick={(e) => handleToolClick(e, 'upscaler')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block font-medium text-indigo-400"
+                >
+                  AI Image Upscaler
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/ocr/"
+                  onClick={(e) => handleToolClick(e, 'ocr')}
+                  className="hover:text-white transition-colors cursor-pointer text-left block font-medium text-amber-400"
+                >
+                  Image to Text (OCR)
+                </a>
+              </li>
               <li>
                 <a
                   href="/compress/"
@@ -103,6 +136,15 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onOpenModal }) => {
                   Image Resizer
                 </a>
               </li>
+            </ul>
+          </div>
+
+          {/* MORE TOOLS & CREATIVE Column */}
+          <div className="space-y-4">
+            <h3 className="font-bold text-white uppercase tracking-wider text-xs sm:text-sm">
+              CREATIVE & DOCS
+            </h3>
+            <ul className="space-y-2.5 text-xs sm:text-sm">
               <li>
                 <a
                   href="/rotate/"
@@ -130,15 +172,6 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab, onOpenModal }) => {
                   Image to PDF
                 </a>
               </li>
-            </ul>
-          </div>
-
-          {/* MORE TOOLS & CREATIVE Column */}
-          <div className="space-y-4">
-            <h3 className="font-bold text-white uppercase tracking-wider text-xs sm:text-sm">
-              CREATIVE SUITE
-            </h3>
-            <ul className="space-y-2.5 text-xs sm:text-sm">
               <li>
                 <a
                   href="/watermark/"

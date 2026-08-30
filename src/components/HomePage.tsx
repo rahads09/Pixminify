@@ -25,6 +25,36 @@ interface HomePageProps {
 export const HomePage: React.FC<HomePageProps> = ({ onSelectTool }) => {
   const tools = [
     {
+      id: 'background-remover' as ActiveTab,
+      name: 'AI Background Remover',
+      tag: 'New AI Tool',
+      tagColor: 'bg-blue-100 text-blue-800 font-bold',
+      icon: Sparkles,
+      iconBg: 'bg-blue-500/10 text-blue-600 border-blue-200',
+      description: 'Remove background from photos and products automatically with client-side AI. Transparent PNG export.',
+      badge: '100% Client AI',
+    },
+    {
+      id: 'upscaler' as ActiveTab,
+      name: 'AI Image Upscaler',
+      tag: 'Super Resolution',
+      tagColor: 'bg-indigo-100 text-indigo-800 font-bold',
+      icon: Maximize2,
+      iconBg: 'bg-indigo-500/10 text-indigo-600 border-indigo-200',
+      description: 'Enlarge images 2x and 4x with neural super-resolution models directly in your browser.',
+      badge: '2x & 4x Neural',
+    },
+    {
+      id: 'ocr' as ActiveTab,
+      name: 'Image to Text (OCR)',
+      tag: 'Text Extractor',
+      tagColor: 'bg-amber-100 text-amber-800 font-bold',
+      icon: FileText,
+      iconBg: 'bg-amber-500/10 text-amber-600 border-amber-200',
+      description: 'Extract text from images, receipts, and documents in English, Bengali, Hindi, Arabic, and more.',
+      badge: 'Multi-Language',
+    },
+    {
       id: 'compress' as ActiveTab,
       name: 'Compress Image',
       tag: 'Most Popular',
@@ -121,7 +151,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectTool }) => {
       tagColor: 'bg-violet-100 text-violet-800 font-bold',
       icon: Sparkles,
       iconBg: 'bg-violet-500/10 text-violet-600 border-violet-200',
-      description: 'AI Background Remover, SVG Vectorizer, EXIF Stripper, GIF Maker, OCR Text Extractor & Upscaler are coming soon.',
+      description: 'SVG Vectorizer, EXIF Metadata Stripper, GIF Maker, and Web Video Minifier are coming soon.',
       badge: 'Upcoming Tools',
     },
   ];
@@ -176,7 +206,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onSelectTool }) => {
                   e.preventDefault();
                   onSelectTool(tool.id);
                 }}
-                className="group relative p-6 rounded-2xl bg-white hover:bg-slate-50/90 border border-slate-300 hover:border-blue-600 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between"
+                className="tool-card-interactive group relative p-6 rounded-2xl bg-white hover:bg-slate-50/90 border border-slate-300 hover:border-blue-600 shadow-sm cursor-pointer flex flex-col justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 select-none"
               >
                 <div>
                   <div className="flex items-start justify-between mb-4">

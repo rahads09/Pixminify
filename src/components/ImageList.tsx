@@ -9,7 +9,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { ProcessedImage } from '../types';
+import { ProcessedImage, ToolResultData } from '../types';
 import { formatBytes, downloadImage, downloadAllAsZip } from '../utils/imageProcessor';
 
 interface ImageListProps {
@@ -19,6 +19,7 @@ interface ImageListProps {
   onOpenCompare: (item: ProcessedImage) => void;
   onOpenItemSettings?: (item: ProcessedImage) => void;
   isProcessing: boolean;
+  onShowResult?: (result: ToolResultData) => void;
 }
 
 export const ImageList: React.FC<ImageListProps> = ({
@@ -27,6 +28,7 @@ export const ImageList: React.FC<ImageListProps> = ({
   onClearAll,
   onOpenCompare,
   isProcessing,
+  onShowResult,
 }) => {
   if (items.length === 0) return null;
 
@@ -226,7 +228,39 @@ export const ImageList: React.FC<ImageListProps> = ({
                   <button
                     type="button"
                     id={`download-single-btn-${item.id}`}
-                    onClick={() => downloadImage(item)}
+                    onClick={() => {
+                      if (onShowResult && item.compressedBlob) {
+                        const savings = item.compressedSize
+                          ? Math.round(((item.originalSize - item.compressedSize) / item.originalSize) * 100)
+                          : 0;
+                        onShowResult({
+                          toolId: 'compress',
+                          toolName: 'Compress Image',
+                          fileName: item.name,
+                          fileType: item.compressedType || item.originalType,
+                          fileSize: item.compressedSize || item.compressedBlob.size,
+                          originalSize: item.originalSize,
+                          savedBytes: item.compressedSize ? Math.max(0, item.originalSize - item.compressedSize) : 0,
+                          savedPercentage: savings,
+                          blob: item.compressedBlob,
+                          previewUrl: item.compressedPreviewUrl || item.originalPreviewUrl,
+                          dimensions: item.compressedWidth && item.compressedHeight ? { width: item.compressedWidth, height: item.compressedHeight } : undefined,
+                          details: [
+                            { label: 'Original Size', value: formatBytes(item.originalSize) },
+                            { label: 'Compressed Size', value: formatBytes(item.compressedSize || item.compressedBlob.size) },
+                            { label: 'Space Saved', value: `${savings}% reduction` },
+                          ],
+                          onResetTool: () => {
+                            onClearAll();
+                          },
+                          onBackToWorkspace: () => {
+                            // Keep compress queue
+                          },
+                        });
+                      } else {
+                        downloadImage(item);
+                      }
+                    }}
                     className="p-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-xs transition-all cursor-pointer"
                     title="Download Compressed Image"
                   >

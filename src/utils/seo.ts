@@ -115,6 +115,50 @@ export const SEO_DATA: Record<ActiveTab, SeoMetadata> = {
     ogUrl: `${CANONICAL_DOMAIN}/filter/`,
     keywords: ['photo filters online', 'apply filters to images', 'free photo effects', 'vintage filter', 'grayscale picture', 'color tone'],
   },
+  'bg-remover': {
+    path: '/background-remover/',
+    title: 'Free AI Background Remover Online | Pixminify',
+    description: 'Remove backgrounds from photos, portraits, and product images in your browser with AI. 100% free, private client-side cutout with transparent PNG export.',
+    h1: 'Free AI Background Remover',
+    canonical: `${CANONICAL_DOMAIN}/background-remover/`,
+    ogTitle: 'Free AI Background Remover Online | Pixminify',
+    ogDescription: 'Remove backgrounds from photos, portraits, and product images in your browser with AI. 100% free, private client-side cutout with transparent PNG export.',
+    ogUrl: `${CANONICAL_DOMAIN}/background-remover/`,
+    keywords: ['ai background remover', 'remove background online', 'transparent background png', 'free cutout tool', 'photo background eraser'],
+  },
+  'background-remover': {
+    path: '/background-remover/',
+    title: 'Free AI Background Remover Online | Pixminify',
+    description: 'Remove backgrounds from photos, portraits, and product images in your browser with AI. 100% free, private client-side cutout with transparent PNG export.',
+    h1: 'Free AI Background Remover',
+    canonical: `${CANONICAL_DOMAIN}/background-remover/`,
+    ogTitle: 'Free AI Background Remover Online | Pixminify',
+    ogDescription: 'Remove backgrounds from photos, portraits, and product images in your browser with AI. 100% free, private client-side cutout with transparent PNG export.',
+    ogUrl: `${CANONICAL_DOMAIN}/background-remover/`,
+    keywords: ['ai background remover', 'remove background online', 'transparent background png', 'free cutout tool', 'photo background eraser'],
+  },
+  upscaler: {
+    path: '/upscaler/',
+    title: 'Free AI Image Upscaler – 2x & 4x | Pixminify',
+    description: 'Upscale and enhance image resolution by 2x and 4x using neural super-resolution models directly in your browser. 100% free, private, and high fidelity.',
+    h1: 'AI Image Upscaler & Super Resolution',
+    canonical: `${CANONICAL_DOMAIN}/upscaler/`,
+    ogTitle: 'Free AI Image Upscaler – 2x & 4x | Pixminify',
+    ogDescription: 'Upscale and enhance image resolution by 2x and 4x using neural super-resolution models directly in your browser. 100% free, private, and high fidelity.',
+    ogUrl: `${CANONICAL_DOMAIN}/upscaler/`,
+    keywords: ['ai image upscaler', 'super resolution 4x', 'enhance photo resolution', '2x 4x upscaler online', 'real-esrgan browser'],
+  },
+  ocr: {
+    path: '/ocr/',
+    title: 'Free Image to Text OCR Online | Pixminify',
+    description: 'Extract text from images, photos, receipts, and scanned documents in your browser with OCR. Supports English, Bengali, Hindi, Arabic, and more with instant export.',
+    h1: 'Image to Text OCR Extractor',
+    canonical: `${CANONICAL_DOMAIN}/ocr/`,
+    ogTitle: 'Free Image to Text OCR Online | Pixminify',
+    ogDescription: 'Extract text from images, photos, receipts, and scanned documents in your browser with OCR. Supports English, Bengali, Hindi, Arabic, and more with instant export.',
+    ogUrl: `${CANONICAL_DOMAIN}/ocr/`,
+    keywords: ['image to text ocr', 'extract text from image', 'free ocr online', 'photo to text converter', 'bengali hindi arabic ocr'],
+  },
   blog: {
     path: '/blog/',
     title: 'Pixminify Blog - Guides, Tutorials & Image Optimization Tips',
@@ -217,6 +261,26 @@ export const SEO_DATA: Record<ActiveTab, SeoMetadata> = {
     ogDescription: 'Preview upcoming tools in active development: AI Background Remover, SVG Vectorizer, EXIF Stripper, OCR Text Extractor, and more.',
     ogUrl: `${CANONICAL_DOMAIN}/coming-soon/`,
   },
+  result: {
+    path: '/result/',
+    title: 'Your Processed File is Ready | Pixminify',
+    description: 'Your image or document has been processed successfully. Download your file with zero server uploads.',
+    h1: 'Your File is Ready!',
+    canonical: `${CANONICAL_DOMAIN}/result/`,
+    ogTitle: 'Your Processed File is Ready | Pixminify',
+    ogDescription: 'Your image or document has been processed successfully. Download your file with zero server uploads.',
+    ogUrl: `${CANONICAL_DOMAIN}/result/`,
+  },
+  download: {
+    path: '/download/',
+    title: 'Download Processed File | Pixminify',
+    description: 'Download your processed image, PDF, or extracted text file with Pixminify.',
+    h1: 'Download Your File',
+    canonical: `${CANONICAL_DOMAIN}/download/`,
+    ogTitle: 'Download Processed File | Pixminify',
+    ogDescription: 'Download your processed image, PDF, or extracted text file with Pixminify.',
+    ogUrl: `${CANONICAL_DOMAIN}/download/`,
+  },
   'not-found': {
     path: '/404/',
     title: 'Page Not Found (404) | Pixminify',
@@ -238,6 +302,11 @@ export const getPathForTab = (tab: ActiveTab, articleSlug?: string | null): stri
   }
   if (tab === 'home') return '/';
   if (tab === 'not-found') return '/404/';
+  if (tab === 'bg-remover' || tab === 'background-remover') return '/background-remover/';
+  if (tab === 'upscaler') return '/upscaler/';
+  if (tab === 'ocr') return '/ocr/';
+  if (tab === 'result') return '/result/';
+  if (tab === 'download') return '/download/';
   return `/${tab}/`;
 };
 
@@ -273,9 +342,31 @@ export const getTabForPath = (rawPathOrHash: string): ActiveTab => {
     return 'not-found';
   }
 
+  if (root === 'background-remover' || root === 'bg-remover') {
+    return 'background-remover';
+  }
+
+  if (root === 'upscaler' || root === 'ai-upscaler') {
+    return 'upscaler';
+  }
+
+  if (root === 'ocr' || root === 'image-to-text') {
+    return 'ocr';
+  }
+
+  if (root === 'result') {
+    return 'result';
+  }
+
+  if (root === 'download') {
+    return 'download';
+  }
+
   const validTabs: ActiveTab[] = [
     'home', 'compress', 'crop', 'rotate', 'convert', 'resize', 'pdf',
-    'watermark', 'filter', 'guide', 'blog', 'about', 'contact', 'privacy',
+    'watermark', 'filter', 'bg-remover', 'background-remover', 'upscaler', 'ocr',
+    'result', 'download',
+    'guide', 'blog', 'about', 'contact', 'privacy',
     'terms', 'cookies', 'faq', 'pricing', 'coming-soon'
   ];
 
@@ -321,10 +412,12 @@ export const updatePageSeo = (tab: ActiveTab, activeArticle?: BlogArticle | null
     setMeta('property', 'og:url', articleCanonical);
     setMeta('property', 'og:type', 'article');
     setMeta('property', 'og:site_name', 'Pixminify');
+    setMeta('property', 'og:image', `${CANONICAL_DOMAIN}/pixminify-logo.png`);
 
     setMeta('name', 'twitter:card', 'summary_large_image');
     setMeta('name', 'twitter:title', activeArticle.seoTitle);
     setMeta('name', 'twitter:description', activeArticle.metaDescription);
+    setMeta('name', 'twitter:image', `${CANONICAL_DOMAIN}/pixminify-logo.png`);
 
     // Article + FAQ Schema
     let schemaScript = document.getElementById('pixminify-schema') as HTMLScriptElement | null;
@@ -355,7 +448,7 @@ export const updatePageSeo = (tab: ActiveTab, activeArticle?: BlogArticle | null
           url: CANONICAL_DOMAIN,
           logo: {
             '@type': 'ImageObject',
-            url: `${CANONICAL_DOMAIN}/logo.png`,
+            url: `${CANONICAL_DOMAIN}/pixminify-logo.png`,
           },
         },
         datePublished: '2026-08-24',
@@ -419,10 +512,12 @@ export const updatePageSeo = (tab: ActiveTab, activeArticle?: BlogArticle | null
   setMeta('property', 'og:url', seo.ogUrl);
   setMeta('property', 'og:type', 'website');
   setMeta('property', 'og:site_name', 'Pixminify');
+  setMeta('property', 'og:image', `${CANONICAL_DOMAIN}/pixminify-logo.png`);
 
   setMeta('name', 'twitter:card', 'summary_large_image');
   setMeta('name', 'twitter:title', seo.ogTitle);
   setMeta('name', 'twitter:description', seo.ogDescription);
+  setMeta('name', 'twitter:image', `${CANONICAL_DOMAIN}/pixminify-logo.png`);
 
   // Structured JSON-LD for WebApplication
   let schemaScript = document.getElementById('pixminify-schema') as HTMLScriptElement | null;
@@ -440,6 +535,7 @@ export const updatePageSeo = (tab: ActiveTab, activeArticle?: BlogArticle | null
     applicationCategory: 'MultimediaApplication',
     operatingSystem: 'Any (Browser-based)',
     url: seo.canonical,
+    image: `${CANONICAL_DOMAIN}/pixminify-logo.png`,
     description: seo.description,
     browserRequirements: 'Requires JavaScript. Requires HTML5 Canvas support.',
     offers: {

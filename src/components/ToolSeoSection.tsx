@@ -581,6 +581,214 @@ const TOOL_SEO_CONTENT: Partial<Record<ActiveTab, ToolSeoData>> = {
       { tab: 'compress', label: 'Image Compressor', desc: 'Optimize your enhanced photo for sharing', icon: Minimize2 },
     ],
   },
+  'background-remover': {
+    toolName: 'AI Background Remover',
+    introTitle: 'Automatic AI Background Removal in Your Browser',
+    introText:
+      'Pixminify AI Background Remover uses advanced client-side neural segmentation models to identify human subjects, products, cars, animals, and objects with hair-level edge accuracy. Cutouts are generated with 100% transparent alpha channels without uploading your personal photos to any remote cloud server.',
+    steps: [
+      {
+        title: '1. Select or Drop Your Image',
+        desc: 'Upload any portrait, product photo, e-commerce shot, or graphic in JPG, PNG, or WebP format.',
+      },
+      {
+        title: '2. Automatic AI Edge Segmentation',
+        desc: 'Our in-browser neural network automatically isolates foreground elements and erases background clutter.',
+      },
+      {
+        title: '3. Preview & Download PNG',
+        desc: 'Inspect cutout quality on solid or transparent backdrops and download high-resolution transparent PNG.',
+      },
+    ],
+    features: [
+      'State-of-the-art neural segmentation running directly in WebAssembly/WebGPU',
+      'Hair, edge, and complex boundary detection with feathering',
+      'Interactive side-by-side comparison slider and multiple backdrop preview modes',
+      'Instant transparent PNG export with full original image resolution',
+      'Zero server upload—complete privacy for sensitive documents and personal photos',
+    ],
+    supportedFormats: [
+      { name: 'PNG', desc: 'Transparent PNG cutout output at full pixel fidelity' },
+      { name: 'JPEG / JPG', desc: 'Portraits, product photos, real-estate shots, and snapshots' },
+      { name: 'WebP', desc: 'Modern web image cutouts' },
+    ],
+    useCases: [
+      {
+        title: 'E-Commerce & Amazon/Shopify Product Listings',
+        desc: 'Create clean white or transparent product photos that boost conversion rates.',
+      },
+      {
+        title: 'Portraits, Headshots & Profile Avatars',
+        desc: 'Isolate yourself or team members for professional resumes, badges, and avatars.',
+      },
+      {
+        title: 'Graphic Design & Marketing Collateral',
+        desc: 'Drop cutout elements seamlessly into banners, YouTube thumbnails, and promotional posters.',
+      },
+    ],
+    faqs: [
+      {
+        q: 'Are my photos uploaded to your server to remove the background?',
+        a: 'No. All neural network calculations run locally in your web browser. Your images never leave your computer or phone.',
+      },
+      {
+        q: 'Why does the first background removal take a few seconds?',
+        a: 'On the very first run, your browser downloads the lightweight neural model (~20MB) into local cache. Subsequent removals run rapidly from cache.',
+      },
+      {
+        q: 'Can I replace the background with a custom color?',
+        a: 'Yes! You can preview your cutout against transparent checkerboard, solid white, dark studio, or any custom color palette.',
+      },
+    ],
+    guideSlugs: [
+      'how-to-compress-images-without-losing-quality',
+      'how-to-crop-images-online',
+      'how-to-use-image-filters',
+    ],
+    relatedTools: [
+      { tab: 'upscaler', label: 'AI Upscaler', desc: 'Upscale your cutout to ultra-high 4K resolution', icon: Maximize2 },
+      { tab: 'compress', label: 'Image Compressor', desc: 'Minify transparent PNG file size for fast websites', icon: Minimize2 },
+      { tab: 'crop', label: 'Image Cropper', desc: 'Tighten bounds around your subject cutout', icon: CropIcon },
+      { tab: 'watermark', label: 'Add Watermark', desc: 'Protect your e-commerce product photos', icon: Stamp },
+    ],
+  },
+  upscaler: {
+    toolName: 'AI Image Upscaler',
+    introTitle: 'Enhance and Enlarge Resolution with Neural Super-Resolution',
+    introText:
+      'Pixminify AI Image Upscaler increases photo resolution by 2x and 4x without the pixelation, blurriness, or artifacts created by standard bicubic enlargement. Using in-browser neural super-resolution networks, it reconstructs fine textures, sharp edges, and subtle details.',
+    steps: [
+      {
+        title: '1. Upload Low-Res Image',
+        desc: 'Drop your photo, digital artwork, screenshot, or vintage scan into the upscaler.',
+      },
+      {
+        title: '2. Select 2x or 4x Scale Factor',
+        desc: 'Choose 2x for fast detail enhancement or 4x for high-resolution print and 4K displays.',
+      },
+      {
+        title: '3. Preview Split Comparison & Download',
+        desc: 'Examine before and after results with the interactive slider and save your crisp enhanced image.',
+      },
+    ],
+    features: [
+      'Real in-browser neural super-resolution processing via WebAssembly and WebGPU',
+      'Reconstruction of sharp text, contours, and sub-pixel high-frequency textures',
+      'Interactive before/after split screen inspector',
+      'Zero server upload—all calculations are executed securely on your machine',
+      'Download in lossless PNG, JPG, or modern WebP format',
+    ],
+    supportedFormats: [
+      { name: 'JPEG', desc: 'Enhance vintage photos and compressed web snapshots' },
+      { name: 'PNG', desc: 'Upscale logos, icons, pixel art, and digital illustrations' },
+      { name: 'WebP', desc: 'Super-resolve modern web assets for Retina displays' },
+    ],
+    useCases: [
+      {
+        title: 'Restoring Old or Low-Resolution Family Photos',
+        desc: 'Breathe new life into vintage scans and low-megapixel digital camera pictures.',
+      },
+      {
+        title: 'Preparing Graphics for High-DPI & Print',
+        desc: 'Enlarge small logos or designs to print-ready 300 DPI resolutions without blur.',
+      },
+      {
+        title: 'Enhancing Social Media & E-Commerce Visuals',
+        desc: 'Create ultra-sharp product zoom visuals that captivate shoppers.',
+      },
+    ],
+    faqs: [
+      {
+        q: 'How is AI upscaling different from regular resizing?',
+        a: 'Traditional resizing simply stretches existing pixels, causing blurriness and pixelation. AI super-resolution predicts and reconstructs lost detail and sharp edges.',
+      },
+      {
+        q: 'Is there a limit on input image dimensions?',
+        a: 'We recommend input images under 2000×2000px so your browser can process the neural tensors comfortably within system memory limits.',
+      },
+    ],
+    guideSlugs: [
+      'how-to-compress-images-without-losing-quality',
+      'how-to-crop-images-online',
+      'how-to-use-image-filters',
+    ],
+    relatedTools: [
+      { tab: 'background-remover', label: 'AI Background Remover', desc: 'Remove backgrounds from upscaled photos', icon: Sparkles },
+      { tab: 'compress', label: 'Image Compressor', desc: 'Compress upscaled images to reduce download sizes', icon: Minimize2 },
+      { tab: 'filter', label: 'Photo Filters', desc: 'Enhance color saturation and lighting balance', icon: Sliders },
+      { tab: 'pdf', label: 'Image to PDF', desc: 'Combine upscaled documents into high-res PDF', icon: FileText },
+    ],
+  },
+  ocr: {
+    toolName: 'Image to Text (OCR)',
+    introTitle: 'Extract Text From Images, Receipts, Scans & Screenshots',
+    introText:
+      'Pixminify Optical Character Recognition (OCR) extracts text from images, documents, invoices, receipts, and book pages with high accuracy. Powered by client-side Tesseract WebAssembly, it supports multilingual recognition for English, Bengali, Hindi, Arabic, Spanish, French, German, and more.',
+    steps: [
+      {
+        title: '1. Upload Image or Document Scan',
+        desc: 'Drop an invoice, receipt, screenshot, or book photo into the upload area.',
+      },
+      {
+        title: '2. Select OCR Language',
+        desc: 'Pick your document language (English, Bengali, Hindi, Arabic, Spanish, etc.).',
+      },
+      {
+        title: '3. Copy or Download Extracted Text',
+        desc: 'Edit the parsed text in the built-in editor, copy to clipboard, or save as a TXT file.',
+      },
+    ],
+    features: [
+      '100% private in-browser OCR powered by Tesseract WebAssembly engine',
+      'Multi-language support including English, Bengali, Hindi, Arabic, Chinese, and European languages',
+      'Interactive editable text area with instant word, character, and line counters',
+      'One-click Copy to Clipboard and TXT file export',
+      'Zero server upload—protecting private contracts, banking receipts, and personal notes',
+    ],
+    supportedFormats: [
+      { name: 'PNG / JPG', desc: 'Clear scans, receipts, contracts, textbook photos, and phone snapshots' },
+      { name: 'WebP', desc: 'Digital screenshots and web captures' },
+    ],
+    useCases: [
+      {
+        title: 'Digitizing Paper Documents & Invoices',
+        desc: 'Turn printed receipts, contracts, and bills into searchable, editable digital text.',
+      },
+      {
+        title: 'Extracting Text from Screenshots & PDFs',
+        desc: 'Copy error logs, tables, quotes, or snippets from non-copyable images.',
+      },
+      {
+        title: 'Academic & Book Research',
+        desc: 'Quickly digitize notes, whiteboard diagrams, and textbook passages.',
+      },
+    ],
+    faqs: [
+      {
+        q: 'How accurate is the OCR text recognition?',
+        a: 'Accuracy exceeds 95% on clear, high-contrast, upright text. For best results, ensure the image is evenly lit and not blurry.',
+      },
+      {
+        q: 'Can I extract text in non-Latin languages like Bengali, Hindi, or Arabic?',
+        a: 'Yes! Select your target language from the dropdown menu, and the appropriate trained model will be loaded automatically.',
+      },
+      {
+        q: 'Are my confidential documents private?',
+        a: 'Absolutely. The OCR engine executes entirely on your device using WebAssembly. No text or image data is ever sent to any remote server.',
+      },
+    ],
+    guideSlugs: [
+      'how-to-compress-images-without-losing-quality',
+      'how-to-add-watermark-to-images',
+      'how-to-rotate-and-flip-images',
+    ],
+    relatedTools: [
+      { tab: 'pdf', label: 'Image to PDF', desc: 'Compile multiple document pages into a PDF', icon: FileText },
+      { tab: 'rotate', label: 'Rotate & Flip', desc: 'Straighten crooked document scans for higher OCR accuracy', icon: RotateCw },
+      { tab: 'crop', label: 'Image Cropper', desc: 'Crop around the specific paragraph or receipt section', icon: CropIcon },
+      { tab: 'filter', label: 'Photo Filters', desc: 'Boost contrast and convert to grayscale for sharper text', icon: Sliders },
+    ],
+  },
 };
 
 interface ToolSeoSectionProps {

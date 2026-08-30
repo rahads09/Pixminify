@@ -4,13 +4,14 @@ import {
   Type,
   Image as ImageIcon,
   Download,
-  UploadCloud,
   Grid,
   RefreshCw,
-  Sparkles,
+  UploadCloud,
 } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import { loadImageElement, formatBytes } from '../utils/imageProcessor';
+import { ToolUploadPage } from './ToolUploadPage';
+import { ToolResultData } from '../types';
 
 type WatermarkMode = 'text' | 'image';
 type PositionOption =
@@ -25,10 +26,19 @@ type PositionOption =
   | 'bottom-right'
   | 'tile';
 
-export const WatermarkTool: React.FC = () => {
+export interface WatermarkToolProps {
+  onHasImageChange?: (hasImage: boolean) => void;
+  onShowResult?: (result: ToolResultData) => void;
+}
+
+export const WatermarkTool: React.FC<WatermarkToolProps> = ({ onHasImageChange, onShowResult }) => {
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [imgNaturalSize, setImgNaturalSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+
+  useEffect(() => {
+    onHasImageChange?.(Boolean(sourceImage));
+  }, [sourceImage, onHasImageChange]);
 
   const [mode, setMode] = useState<WatermarkMode>('text');
 
@@ -56,16 +66,40 @@ export const WatermarkTool: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleProcessFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setSourceFile(file);
+    const url = URL.createObjectURL(file);
+    setSourceImage(url);
+
+    const img = await loadImageElement(file);
+    setImgNaturalSize({ w: img.naturalWidth || img.width, h: img.naturalHeight || img.height });
+  };
+
   const handleMainFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSourceFile(file);
-      const url = URL.createObjectURL(file);
-      setSourceImage(url);
-
-      const img = await loadImageElement(file);
-      setImgNaturalSize({ w: img.naturalWidth || img.width, h: img.naturalHeight || img.height });
+      handleProcessFile(e.target.files[0]);
     }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleProcessFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
   };
 
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -237,54 +271,85 @@ export const WatermarkTool: React.FC = () => {
     if (!resultBlob || !sourceFile) return;
     const baseName = sourceFile.name.substring(0, sourceFile.name.lastIndexOf('.')) || sourceFile.name;
     const ext = outputFormat === 'image/png' ? 'png' : outputFormat === 'image/webp' ? 'webp' : 'jpg';
-    saveAs(resultBlob, `watermarked_${baseName}.${ext}`);
+    const fileName = `watermarked_${baseName}.${ext}`;
+
+    if (onShowResult) {
+      onShowResult({
+        toolId: 'watermark',
+        toolName: 'Watermark Image',
+        fileName,
+        fileType: outputFormat,
+        fileSize: resultBlob.size,
+        blob: resultBlob,
+        previewUrl: resultUrl || undefined,
+        dimensions: imgNaturalSize.w && imgNaturalSize.h ? { width: imgNaturalSize.w, height: imgNaturalSize.h } : undefined,
+        details: [
+          { label: 'Mode', value: mode === 'text' ? `Text ("${watermarkText}")` : 'Logo / Image' },
+          { label: 'Position', value: position.replace('-', ' ').toUpperCase() },
+          { label: 'Output Format', value: outputFormat.replace('image/', '').toUpperCase() },
+        ],
+        onResetTool: () => {
+          setSourceImage(null);
+          setSourceFile(null);
+          setResultBlob(null);
+          setResultUrl(null);
+        },
+        onBackToWorkspace: () => {
+          // Keep watermark workspace
+        },
+      });
+    } else {
+      saveAs(resultBlob, fileName);
+    }
   };
+
+  if (!sourceImage) {
+    return (
+      <ToolUploadPage
+        title="Watermark Image"
+        subtitle="Add a text or image watermark to your photo."
+        acceptedFormats="Supports JPG, PNG, WebP, AVIF"
+        accept="image/*"
+        accentColor="amber"
+        buttonText="Upload Image"
+        onImageSelected={(files) => {
+          if (files[0]) handleProcessFile(files[0]);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Tool Header */}
-      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs">
-        <div className="flex items-center space-x-2 text-amber-600 text-xs font-semibold uppercase tracking-wider mb-1">
-          <Stamp className="w-4 h-4" />
-          <span>Image Watermark & Copyright Tool</span>
+      {/* Workspace Header */}
+      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <div className="flex items-center space-x-2 text-amber-600 text-xs font-semibold uppercase tracking-wider mb-1">
+            <Stamp className="w-4 h-4" />
+            <span>Image Watermark & Copyright Tool</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Protect Photos with Text or Logo Watermarks
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+            {sourceFile?.name} • {imgNaturalSize.w} × {imgNaturalSize.h}px • {sourceFile && formatBytes(sourceFile.size)}
+          </p>
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-          Protect Photos with Text or Logo Watermarks
-        </h2>
-        <p className="text-sm text-slate-600 mt-1">
-          Apply custom copyright text or transparent company logos with full opacity, rotation, and multi-position placement.
-        </p>
+
+        <button
+          onClick={() => {
+            setSourceImage(null);
+            setSourceFile(null);
+            setResultBlob(null);
+            setResultUrl(null);
+          }}
+          className="btn-interactive px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all cursor-pointer"
+        >
+          Change Image
+        </button>
       </div>
 
-      {!sourceImage ? (
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-amber-300 hover:border-amber-500 bg-white hover:bg-slate-50 rounded-2xl p-12 text-center transition-all cursor-pointer shadow-xs group flex flex-col items-center justify-center space-y-4"
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleMainFileChange}
-            className="hidden"
-          />
-          <div className="w-16 h-16 rounded-2xl bg-amber-50 group-hover:bg-amber-600 text-amber-600 group-hover:text-white flex items-center justify-center transition-all shadow-xs group-hover:scale-105">
-            <UploadCloud className="w-8 h-8" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">
-              Select or Drop an Image to Watermark
-            </h3>
-            <p className="text-xs text-slate-600 max-w-sm">
-              Supports JPEG, PNG, WebP, and AVIF.
-            </p>
-          </div>
-          <button className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer">
-            Browse File
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Visual Stage (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
             <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
@@ -561,7 +626,6 @@ export const WatermarkTool: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
-    </div>
+      </div>
   );
 };
